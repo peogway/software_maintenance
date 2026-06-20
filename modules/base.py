@@ -4,7 +4,6 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Iterable, Sequence
 
-
 COLORS = {
     "bg": "#0f172a",
     "panel": "#111c33",
@@ -45,6 +44,26 @@ class BaseModuleFrame(tk.Frame):
         self._sort_column = None
         self._sort_ascending = True
 
+    def create_button(self, parent, text, command, color):
+        return tk.Button(
+            parent,
+            text=text,
+            command=command,
+            bg=color,
+            fg="white",
+            relief="flat",
+            font=FONTS["button"],
+        )
+
+    def create_panel(self, parent):
+        return tk.Frame(
+            parent,
+            bg=COLORS["panel"],
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#22314f",
+        )
+
     def build_heading(self, title: str, subtitle: str = "") -> tk.Frame:
         container = tk.Frame(self, bg=COLORS["bg"])
         container.pack(fill="x", padx=24, pady=(18, 12))
@@ -70,8 +89,16 @@ class BaseModuleFrame(tk.Frame):
 
         return container
 
-    def build_card(self, parent: tk.Widget, title: str, value: str, accent: str) -> tk.Frame:
-        card = tk.Frame(parent, bg=COLORS["card"], bd=0, highlightthickness=1, highlightbackground="#22314f")
+    def build_card(
+        self, parent: tk.Widget, title: str, value: str, accent: str
+    ) -> tk.Frame:
+        card = tk.Frame(
+            parent,
+            bg=COLORS["card"],
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#22314f",
+        )
         card.pack_propagate(False)
 
         accent_bar = tk.Frame(card, bg=accent, height=4)
@@ -130,7 +157,9 @@ class BaseModuleFrame(tk.Frame):
             entry.configure(state="readonly")
         return entry
 
-    def labeled_text(self, parent: tk.Widget, label_text: str, row: int, column: int, height: int = 4) -> tk.Text:
+    def labeled_text(
+        self, parent: tk.Widget, label_text: str, row: int, column: int, height: int = 4
+    ) -> tk.Text:
         label = tk.Label(
             parent,
             text=label_text,
@@ -153,15 +182,24 @@ class BaseModuleFrame(tk.Frame):
         text.grid(row=row + 1, column=column, sticky="ew", padx=8, pady=(0, 8))
         return text
 
-    def configure_treeview(self, tree: ttk.Treeview, columns: Sequence[str], widths: dict[str, int] | None = None) -> None:
+    def configure_treeview(
+        self,
+        tree: ttk.Treeview,
+        columns: Sequence[str],
+        widths: dict[str, int] | None = None,
+    ) -> None:
         widths = widths or {}
         tree["columns"] = columns
         tree["show"] = "headings"
         for column in columns:
             tree.heading(column, text=column.replace("_", " ").title())
-            tree.column(column, width=widths.get(column, 130), anchor="center", stretch=True)
+            tree.column(
+                column, width=widths.get(column, 130), anchor="center", stretch=True
+            )
 
-    def fill_treeview(self, tree: ttk.Treeview, rows: Iterable[Sequence[object]]) -> None:
+    def fill_treeview(
+        self, tree: ttk.Treeview, rows: Iterable[Sequence[object]]
+    ) -> None:
         for item in tree.get_children():
             tree.delete(item)
         for row in rows:

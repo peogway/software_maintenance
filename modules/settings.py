@@ -30,21 +30,39 @@ class SettingsFrame(BaseModuleFrame):
         wrapper = tk.Frame(self, bg=COLORS["bg"])
         wrapper.pack(fill="both", expand=True, padx=24, pady=(0, 20))
 
-        left = tk.Frame(wrapper, bg=COLORS["panel"], bd=0, highlightthickness=1, highlightbackground="#22314f")
+        left = tk.Frame(
+            wrapper,
+            bg=COLORS["panel"],
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#22314f",
+        )
         left.pack(side="left", fill="both", expand=True, padx=(0, 12))
         left.configure(padx=16, pady=16)
 
-        right = tk.Frame(wrapper, bg=COLORS["panel"], bd=0, highlightthickness=1, highlightbackground="#22314f")
+        right = tk.Frame(
+            wrapper,
+            bg=COLORS["panel"],
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#22314f",
+        )
         right.pack(side="right", fill="both", expand=True)
         right.configure(padx=16, pady=16)
 
-        tk.Label(left, text="Library Information", bg=COLORS["panel"], fg=COLORS["text"], font=FONTS["heading"]).pack(
-            anchor="w", pady=(0, 12)
-        )
+        tk.Label(
+            left,
+            text="Library Information",
+            bg=COLORS["panel"],
+            fg=COLORS["text"],
+            font=FONTS["heading"],
+        ).pack(anchor="w", pady=(0, 12))
 
         form = tk.Frame(left, bg=COLORS["panel"])
         form.pack(fill="both", expand=True)
-        self.library_name_entry = self.labeled_entry(form, "Library Name", 0, 0, width=36)
+        self.library_name_entry = self.labeled_entry(
+            form, "Library Name", 0, 0, width=36
+        )
         self.address_text = self.labeled_text(form, "Address", 2, 0, height=5)
         self.phone_entry = self.labeled_entry(form, "Phone", 4, 0, width=36)
         self.email_entry = self.labeled_entry(form, "Email", 6, 0, width=36)
@@ -52,57 +70,48 @@ class SettingsFrame(BaseModuleFrame):
         button_row = tk.Frame(form, bg=COLORS["panel"])
         button_row.grid(row=8, column=0, sticky="ew", padx=8, pady=(10, 0))
         button_row.columnconfigure((0, 1), weight=1)
-        tk.Button(
-            button_row,
-            text="Save Library Info",
-            command=self.save_library_info,
-            bg=COLORS["primary"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
+        self.create_button(
+            button_row, "Save Library Info", self.save_library_info, COLORS["primary"]
         ).grid(row=0, column=0, sticky="ew", padx=4)
-        tk.Button(
-            button_row,
-            text="Backup Database",
-            command=self.backup_database,
-            bg=COLORS["success"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
+
+        self.create_button(
+            button_row, "Backup Database", self.backup_database, COLORS["success"]
         ).grid(row=0, column=1, sticky="ew", padx=4)
 
-        tk.Label(right, text="Security & Restore", bg=COLORS["panel"], fg=COLORS["text"], font=FONTS["heading"]).pack(
-            anchor="w", pady=(0, 12), padx=2
-        )
+        tk.Label(
+            right,
+            text="Security & Restore",
+            bg=COLORS["panel"],
+            fg=COLORS["text"],
+            font=FONTS["heading"],
+        ).pack(anchor="w", pady=(0, 12), padx=2)
 
         security = tk.Frame(right, bg=COLORS["panel"])
         security.pack(fill="both", expand=True)
 
-        self.current_password_entry = self.labeled_entry(security, "Current Password", 0, 0, width=36, show="*")
-        self.new_password_entry = self.labeled_entry(security, "New Password", 2, 0, width=36, show="*")
-        self.confirm_password_entry = self.labeled_entry(security, "Confirm Password", 4, 0, width=36, show="*")
+        self.current_password_entry = self.labeled_entry(
+            security, "Current Password", 0, 0, width=36, show="*"
+        )
+        self.new_password_entry = self.labeled_entry(
+            security, "New Password", 2, 0, width=36, show="*"
+        )
+        self.confirm_password_entry = self.labeled_entry(
+            security, "Confirm Password", 4, 0, width=36, show="*"
+        )
 
         security_buttons = tk.Frame(security, bg=COLORS["panel"])
         security_buttons.grid(row=6, column=0, sticky="ew", padx=8, pady=(10, 0))
         security_buttons.columnconfigure((0, 1), weight=1)
 
-        tk.Button(
-            security_buttons,
-            text="Change Password",
-            command=self.change_password,
-            bg=COLORS["warning"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
+        self.create_button(
+            security_buttons, "Change Password", self.change_password, COLORS["warning"]
         ).grid(row=0, column=0, sticky="ew", padx=4)
-        tk.Button(
+
+        self.create_button(
             security_buttons,
-            text="Restore Database",
-            command=self.restore_database,
-            bg=COLORS["danger"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
+            "Restore Database",
+            self.restore_database,
+            COLORS["danger"],
         ).grid(row=0, column=1, sticky="ew", padx=4)
 
         note = tk.Label(
@@ -155,22 +164,32 @@ class SettingsFrame(BaseModuleFrame):
         new_password = self.new_password_entry.get().strip()
         confirm_password = self.confirm_password_entry.get().strip()
         if not current_password or not new_password or not confirm_password:
-            messagebox.showwarning("Validation Error", "All password fields are required.")
+            messagebox.showwarning(
+                "Validation Error", "All password fields are required."
+            )
             return
         if new_password != confirm_password:
-            messagebox.showwarning("Validation Error", "New password and confirmation do not match.")
+            messagebox.showwarning(
+                "Validation Error", "New password and confirmation do not match."
+            )
             return
         username = self.app.current_user["username"]
         if not self.db.change_password(username, current_password, new_password):
             messagebox.showerror("Error", "Current password is incorrect.")
             return
         messagebox.showinfo("Success", "Password changed successfully.")
-        self.clear_entries(self.current_password_entry, self.new_password_entry, self.confirm_password_entry)
+        self.clear_entries(
+            self.current_password_entry,
+            self.new_password_entry,
+            self.confirm_password_entry,
+        )
 
     def backup_database(self) -> None:
         try:
             backup_path = self.db.backup_database()
-            messagebox.showinfo("Backup Complete", f"Database backed up to:\n{backup_path}")
+            messagebox.showinfo(
+                "Backup Complete", f"Database backed up to:\n{backup_path}"
+            )
         except Exception as exc:
             messagebox.showerror("Backup Failed", str(exc))
 
@@ -182,7 +201,10 @@ class SettingsFrame(BaseModuleFrame):
         )
         if not file_path:
             return
-        if not messagebox.askyesno("Confirm Restore", "Restore the database from this backup? Current data will be replaced."):
+        if not messagebox.askyesno(
+            "Confirm Restore",
+            "Restore the database from this backup? Current data will be replaced.",
+        ):
             return
         try:
             self.db.restore_database(file_path)

@@ -28,43 +28,73 @@ class IssueBooksFrame(BaseModuleFrame):
         top = tk.Frame(self, bg=COLORS["bg"])
         top.pack(fill="x", padx=24, pady=(0, 16))
 
-        issue_panel = tk.Frame(top, bg=COLORS["panel"], bd=0, highlightthickness=1, highlightbackground="#22314f")
+        issue_panel = tk.Frame(
+            top,
+            bg=COLORS["panel"],
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#22314f",
+        )
         issue_panel.pack(side="left", fill="both", expand=True, padx=(0, 12))
         issue_panel.configure(padx=18, pady=18)
 
-        tk.Label(issue_panel, text="Issue Book", bg=COLORS["panel"], fg=COLORS["text"], font=FONTS["heading"]).grid(
-            row=0, column=0, columnspan=2, sticky="w", pady=(0, 12)
-        )
-
-        tk.Label(issue_panel, text="Member", bg=COLORS["panel"], fg=COLORS["text"], font=FONTS["body"]).grid(
-            row=1, column=0, sticky="w", padx=6
-        )
-        self.member_combo = ttk.Combobox(issue_panel, textvariable=self.member_var, state="readonly", width=42)
-        self.member_combo.grid(row=2, column=0, sticky="ew", padx=6, pady=(0, 10), columnspan=2)
-
-        tk.Label(issue_panel, text="Book", bg=COLORS["panel"], fg=COLORS["text"], font=FONTS["body"]).grid(
-            row=3, column=0, sticky="w", padx=6
-        )
-        self.book_combo = ttk.Combobox(issue_panel, textvariable=self.book_var, state="readonly", width=42)
-        self.book_combo.grid(row=4, column=0, sticky="ew", padx=6, pady=(0, 10), columnspan=2)
-
-        tk.Button(
+        tk.Label(
             issue_panel,
             text="Issue Book",
-            command=self.issue_book,
-            bg=COLORS["primary"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
+            bg=COLORS["panel"],
+            fg=COLORS["text"],
+            font=FONTS["heading"],
+        ).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 12))
+
+        tk.Label(
+            issue_panel,
+            text="Member",
+            bg=COLORS["panel"],
+            fg=COLORS["text"],
+            font=FONTS["body"],
+        ).grid(row=1, column=0, sticky="w", padx=6)
+        self.member_combo = ttk.Combobox(
+            issue_panel, textvariable=self.member_var, state="readonly", width=42
+        )
+        self.member_combo.grid(
+            row=2, column=0, sticky="ew", padx=6, pady=(0, 10), columnspan=2
+        )
+
+        tk.Label(
+            issue_panel,
+            text="Book",
+            bg=COLORS["panel"],
+            fg=COLORS["text"],
+            font=FONTS["body"],
+        ).grid(row=3, column=0, sticky="w", padx=6)
+        self.book_combo = ttk.Combobox(
+            issue_panel, textvariable=self.book_var, state="readonly", width=42
+        )
+        self.book_combo.grid(
+            row=4, column=0, sticky="ew", padx=6, pady=(0, 10), columnspan=2
+        )
+
+        self.create_button(
+            issue_panel, "Issue Book", self.issue_book, COLORS["primary"]
         ).grid(row=5, column=0, sticky="ew", padx=6, pady=(8, 0))
 
-        return_panel = tk.Frame(top, bg=COLORS["panel"], bd=0, highlightthickness=1, highlightbackground="#22314f")
+        return_panel = tk.Frame(
+            top,
+            bg=COLORS["panel"],
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#22314f",
+        )
         return_panel.pack(side="right", fill="both", expand=True)
         return_panel.configure(padx=18, pady=18)
 
-        tk.Label(return_panel, text="Return Book", bg=COLORS["panel"], fg=COLORS["text"], font=FONTS["heading"]).grid(
-            row=0, column=0, sticky="w", pady=(0, 12)
-        )
+        tk.Label(
+            return_panel,
+            text="Return Book",
+            bg=COLORS["panel"],
+            fg=COLORS["text"],
+            font=FONTS["heading"],
+        ).grid(row=0, column=0, sticky="w", pady=(0, 12))
         self.issue_id_label = tk.Label(
             return_panel,
             text="Select an issued record from the table below.",
@@ -76,17 +106,20 @@ class IssueBooksFrame(BaseModuleFrame):
         )
         self.issue_id_label.grid(row=1, column=0, sticky="w", padx=6, pady=(0, 14))
 
-        tk.Button(
+        self.create_button(
             return_panel,
-            text="Return Selected",
-            command=self.return_selected_book,
-            bg=COLORS["success"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
+            "Return Selected",
+            self.return_selected_book,
+            COLORS["success"],
         ).grid(row=2, column=0, sticky="ew", padx=6)
 
-        bottom = tk.Frame(self, bg=COLORS["panel"], bd=0, highlightthickness=1, highlightbackground="#22314f")
+        bottom = tk.Frame(
+            self,
+            bg=COLORS["panel"],
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#22314f",
+        )
         bottom.pack(fill="both", expand=True, padx=24, pady=(0, 20))
 
         table_wrap = tk.Frame(bottom, bg=COLORS["panel"], padx=10, pady=10)
@@ -104,7 +137,9 @@ class IssueBooksFrame(BaseModuleFrame):
             "status",
             "fine_amount",
         ]
-        self.tree = ttk.Treeview(table_wrap, columns=columns, show="headings", selectmode="browse")
+        self.tree = ttk.Treeview(
+            table_wrap, columns=columns, show="headings", selectmode="browse"
+        )
         widths = {
             "id": 60,
             "book_code": 90,
@@ -121,7 +156,9 @@ class IssueBooksFrame(BaseModuleFrame):
         self.tree.bind("<<TreeviewSelect>>", self.on_select)
         self.tree.pack(side="left", fill="both", expand=True)
 
-        scrollbar = ttk.Scrollbar(table_wrap, orient="vertical", command=self.tree.yview)
+        scrollbar = ttk.Scrollbar(
+            table_wrap, orient="vertical", command=self.tree.yview
+        )
         self.tree.configure(yscrollcommand=scrollbar.set)
         scrollbar.pack(side="right", fill="y")
 
@@ -144,7 +181,9 @@ class IssueBooksFrame(BaseModuleFrame):
     def _load_book_options(self) -> None:
         books = self.db.report_available_books()
         self.book_options = {
-            f"{book['book_code']} - {book['title']} (Avail: {book['available_quantity']})": book["id"]
+            f"{book['book_code']} - {book['title']} (Avail: {book['available_quantity']})": book[
+                "id"
+            ]
             for book in books
         }
         self.book_combo["values"] = list(self.book_options.keys())
@@ -164,7 +203,9 @@ class IssueBooksFrame(BaseModuleFrame):
         member_id = self._selected_member_id()
         book_id = self._selected_book_id()
         if member_id is None or book_id is None:
-            messagebox.showwarning("Selection Required", "Select both a member and a book.")
+            messagebox.showwarning(
+                "Selection Required", "Select both a member and a book."
+            )
             return
         try:
             self.db.issue_book(book_id, member_id)
@@ -175,11 +216,15 @@ class IssueBooksFrame(BaseModuleFrame):
 
     def return_selected_book(self) -> None:
         if self.selected_issue_id is None:
-            messagebox.showwarning("Selection Required", "Select an issued record to return.")
+            messagebox.showwarning(
+                "Selection Required", "Select an issued record to return."
+            )
             return
         try:
             fine = self.db.return_book(self.selected_issue_id)
-            messagebox.showinfo("Success", f"Book returned successfully. Fine: Tk {fine:.2f}")
+            messagebox.showinfo(
+                "Success", f"Book returned successfully. Fine: Tk {fine:.2f}"
+            )
             self.refresh_data()
         except Exception as exc:
             messagebox.showerror("Error", str(exc))
@@ -210,7 +255,9 @@ class IssueBooksFrame(BaseModuleFrame):
         self._load_member_options()
         self._load_book_options()
         self.load_data()
-        self.issue_id_label.configure(text="Select an issued record from the table below.")
+        self.issue_id_label.configure(
+            text="Select an issued record from the table below."
+        )
 
     def on_select(self, event) -> None:
         selection = self.tree.selection()

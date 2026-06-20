@@ -28,9 +28,13 @@ class MembersFrame(BaseModuleFrame):
         search_bar = tk.Frame(self, bg=COLORS["panel"], padx=18, pady=14)
         search_bar.pack(fill="x", padx=24, pady=(0, 16))
 
-        tk.Label(search_bar, text="Search By", bg=COLORS["panel"], fg=COLORS["text"], font=FONTS["body"]).grid(
-            row=0, column=0, sticky="w", padx=6
-        )
+        tk.Label(
+            search_bar,
+            text="Search By",
+            bg=COLORS["panel"],
+            fg=COLORS["text"],
+            font=FONTS["body"],
+        ).grid(row=0, column=0, sticky="w", padx=6)
         self.search_field = ttk.Combobox(
             search_bar,
             textvariable=self.search_field_var,
@@ -40,32 +44,24 @@ class MembersFrame(BaseModuleFrame):
         )
         self.search_field.grid(row=0, column=1, padx=6, pady=6)
 
-        tk.Label(search_bar, text="Keyword", bg=COLORS["panel"], fg=COLORS["text"], font=FONTS["body"]).grid(
-            row=0, column=2, sticky="w", padx=6
+        tk.Label(
+            search_bar,
+            text="Keyword",
+            bg=COLORS["panel"],
+            fg=COLORS["text"],
+            font=FONTS["body"],
+        ).grid(row=0, column=2, sticky="w", padx=6)
+        self.search_entry = tk.Entry(
+            search_bar, textvariable=self.search_text_var, width=28, relief="flat"
         )
-        self.search_entry = tk.Entry(search_bar, textvariable=self.search_text_var, width=28, relief="flat")
         self.search_entry.grid(row=0, column=3, padx=6, pady=6)
 
-        tk.Button(
-            search_bar,
-            text="Search",
-            command=self.load_data,
-            bg=COLORS["primary"],
-            fg="white",
-            activebackground=COLORS["primary_dark"],
-            relief="flat",
-            font=FONTS["button"],
+        self.create_button(
+            search_bar, "Search", self.load_data, COLORS["primary"]
         ).grid(row=0, column=4, padx=6)
 
-        tk.Button(
-            search_bar,
-            text="Reset",
-            command=self._reset_search,
-            bg=COLORS["secondary"],
-            fg="white",
-            activebackground="#475569",
-            relief="flat",
-            font=FONTS["button"],
+        self.create_button(
+            search_bar, "Reset", self._reset_search, COLORS["secondary"]
         ).grid(row=0, column=5, padx=6)
 
         search_bar.columnconfigure(6, weight=1)
@@ -73,7 +69,13 @@ class MembersFrame(BaseModuleFrame):
         content = tk.Frame(self, bg=COLORS["bg"])
         content.pack(fill="both", expand=True, padx=24, pady=(0, 20))
 
-        left = tk.Frame(content, bg=COLORS["panel"], bd=0, highlightthickness=1, highlightbackground="#22314f")
+        left = tk.Frame(
+            content,
+            bg=COLORS["panel"],
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#22314f",
+        )
         left.pack(side="left", fill="y", padx=(0, 12))
         left.configure(width=440)
         left.pack_propagate(False)
@@ -81,7 +83,9 @@ class MembersFrame(BaseModuleFrame):
         form = tk.Frame(left, bg=COLORS["panel"], padx=10, pady=10)
         form.pack(fill="both", expand=True)
 
-        self.member_code_entry = self.labeled_entry(form, "Member Code", 0, 0, readonly=True)
+        self.member_code_entry = self.labeled_entry(
+            form, "Member Code", 0, 0, readonly=True
+        )
         self.name_entry = self.labeled_entry(form, "Name", 0, 1)
         self.email_entry = self.labeled_entry(form, "Email", 2, 0)
         self.phone_entry = self.labeled_entry(form, "Phone", 2, 1)
@@ -89,54 +93,43 @@ class MembersFrame(BaseModuleFrame):
         self.address_text.grid(columnspan=2)
 
         action_row = tk.Frame(form, bg=COLORS["panel"])
-        action_row.grid(row=6, column=0, columnspan=2, sticky="ew", padx=8, pady=(12, 0))
+        action_row.grid(
+            row=6, column=0, columnspan=2, sticky="ew", padx=8, pady=(12, 0)
+        )
         action_row.columnconfigure((0, 1, 2, 3), weight=1)
 
-        tk.Button(
-            action_row,
-            text="Add",
-            command=self.add_member,
-            bg=COLORS["success"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
-        ).grid(row=0, column=0, sticky="ew", padx=3)
-        tk.Button(
-            action_row,
-            text="Update",
-            command=self.update_member,
-            bg=COLORS["warning"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
+        self.create_button(action_row, "Add", self.add_member, COLORS["success"]).grid(
+            row=0, column=0, sticky="ew", padx=3
+        )
+
+        self.create_button(
+            action_row, "Update", self.update_member, COLORS["warning"]
         ).grid(row=0, column=1, sticky="ew", padx=3)
-        tk.Button(
-            action_row,
-            text="Delete",
-            command=self.delete_member,
-            bg=COLORS["danger"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
+
+        self.create_button(
+            action_row, "Delete", self.delete_member, COLORS["danger"]
         ).grid(row=0, column=2, sticky="ew", padx=3)
-        tk.Button(
-            action_row,
-            text="Clear",
-            command=self.clear_form,
-            bg=COLORS["secondary"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
+
+        self.create_button(
+            action_row, "Clear", self.clear_form, COLORS["secondary"]
         ).grid(row=0, column=3, sticky="ew", padx=3)
 
-        right = tk.Frame(content, bg=COLORS["panel"], bd=0, highlightthickness=1, highlightbackground="#22314f")
+        right = tk.Frame(
+            content,
+            bg=COLORS["panel"],
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#22314f",
+        )
         right.pack(side="right", fill="both", expand=True)
 
         table_wrap = tk.Frame(right, bg=COLORS["panel"], padx=10, pady=10)
         table_wrap.pack(fill="both", expand=True)
 
         columns = ["member_code", "name", "email", "phone", "address", "join_date"]
-        self.tree = ttk.Treeview(table_wrap, columns=columns, show="headings", selectmode="browse")
+        self.tree = ttk.Treeview(
+            table_wrap, columns=columns, show="headings", selectmode="browse"
+        )
         widths = {
             "member_code": 100,
             "name": 170,
@@ -147,11 +140,17 @@ class MembersFrame(BaseModuleFrame):
         }
         self.configure_treeview(self.tree, columns, widths)
         for column in columns:
-            self.tree.heading(column, text=column.replace("_", " ").title(), command=lambda c=column: self.sort_by(c))
+            self.tree.heading(
+                column,
+                text=column.replace("_", " ").title(),
+                command=lambda c=column: self.sort_by(c),
+            )
         self.tree.bind("<<TreeviewSelect>>", self.on_select)
         self.tree.pack(side="left", fill="both", expand=True)
 
-        scrollbar = ttk.Scrollbar(table_wrap, orient="vertical", command=self.tree.yview)
+        scrollbar = ttk.Scrollbar(
+            table_wrap, orient="vertical", command=self.tree.yview
+        )
         self.tree.configure(yscrollcommand=scrollbar.set)
         scrollbar.pack(side="right", fill="y")
 
@@ -243,7 +242,9 @@ class MembersFrame(BaseModuleFrame):
     def load_data(self) -> None:
         search_text = self.search_text_var.get().strip()
         field = self.search_field_var.get().strip() or "name"
-        members = self.db.fetch_members(search_text, field, self.sort_column, self.sort_ascending)
+        members = self.db.fetch_members(
+            search_text, field, self.sort_column, self.sort_ascending
+        )
         self.fill_treeview(
             self.tree,
             [

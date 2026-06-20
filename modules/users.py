@@ -28,9 +28,13 @@ class UsersFrame(BaseModuleFrame):
         controls = tk.Frame(self, bg=COLORS["panel"], padx=18, pady=14)
         controls.pack(fill="x", padx=24, pady=(0, 16))
 
-        tk.Label(controls, text="Search By", bg=COLORS["panel"], fg=COLORS["text"], font=FONTS["body"]).grid(
-            row=0, column=0, sticky="w", padx=6
-        )
+        tk.Label(
+            controls,
+            text="Search By",
+            bg=COLORS["panel"],
+            fg=COLORS["text"],
+            font=FONTS["body"],
+        ).grid(row=0, column=0, sticky="w", padx=6)
         self.search_field = ttk.Combobox(
             controls,
             textvariable=self.search_field_var,
@@ -40,30 +44,24 @@ class UsersFrame(BaseModuleFrame):
         )
         self.search_field.grid(row=0, column=1, padx=6, pady=6)
 
-        tk.Label(controls, text="Keyword", bg=COLORS["panel"], fg=COLORS["text"], font=FONTS["body"]).grid(
-            row=0, column=2, sticky="w", padx=6
+        tk.Label(
+            controls,
+            text="Keyword",
+            bg=COLORS["panel"],
+            fg=COLORS["text"],
+            font=FONTS["body"],
+        ).grid(row=0, column=2, sticky="w", padx=6)
+        self.search_entry = tk.Entry(
+            controls, textvariable=self.search_text_var, width=28, relief="flat"
         )
-        self.search_entry = tk.Entry(controls, textvariable=self.search_text_var, width=28, relief="flat")
         self.search_entry.grid(row=0, column=3, padx=6, pady=6)
 
-        tk.Button(
-            controls,
-            text="Search",
-            command=self.load_data,
-            bg=COLORS["primary"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
-        ).grid(row=0, column=4, padx=6)
+        self.create_button(controls, "Search", self.load_data, COLORS["primary"]).grid(
+            row=0, column=4, padx=6
+        )
 
-        tk.Button(
-            controls,
-            text="Reset",
-            command=self._reset_search,
-            bg=COLORS["secondary"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
+        self.create_button(
+            controls, "Reset", self._reset_search, COLORS["secondary"]
         ).grid(row=0, column=5, padx=6)
 
         controls.columnconfigure(6, weight=1)
@@ -71,7 +69,13 @@ class UsersFrame(BaseModuleFrame):
         content = tk.Frame(self, bg=COLORS["bg"])
         content.pack(fill="both", expand=True, padx=24, pady=(0, 20))
 
-        left = tk.Frame(content, bg=COLORS["panel"], bd=0, highlightthickness=1, highlightbackground="#22314f")
+        left = tk.Frame(
+            content,
+            bg=COLORS["panel"],
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#22314f",
+        )
         left.pack(side="left", fill="y", padx=(0, 12))
         left.configure(width=440)
         left.pack_propagate(False)
@@ -81,9 +85,13 @@ class UsersFrame(BaseModuleFrame):
 
         self.username_entry = self.labeled_entry(form, "Username", 0, 0)
         self.password_entry = self.labeled_entry(form, "Password", 2, 0, show="*")
-        self.confirm_password_entry = self.labeled_entry(form, "Confirm Password", 4, 0, show="*")
+        self.confirm_password_entry = self.labeled_entry(
+            form, "Confirm Password", 4, 0, show="*"
+        )
         self.role_var = tk.StringVar(value="staff")
-        role_label = tk.Label(form, text="Role", bg=COLORS["panel"], fg=COLORS["text"], font=FONTS["body"])
+        role_label = tk.Label(
+            form, text="Role", bg=COLORS["panel"], fg=COLORS["text"], font=FONTS["body"]
+        )
         role_label.grid(row=6, column=0, sticky="w", padx=8, pady=(8, 3))
         self.role_combo = ttk.Combobox(
             form,
@@ -97,42 +105,21 @@ class UsersFrame(BaseModuleFrame):
         actions.grid(row=8, column=0, sticky="ew", padx=8, pady=(12, 0))
         actions.columnconfigure((0, 1, 2, 3), weight=1)
 
-        tk.Button(
-            actions,
-            text="Add",
-            command=self.add_user,
-            bg=COLORS["success"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
-        ).grid(row=0, column=0, sticky="ew", padx=3)
-        tk.Button(
-            actions,
-            text="Update",
-            command=self.update_user,
-            bg=COLORS["warning"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
-        ).grid(row=0, column=1, sticky="ew", padx=3)
-        tk.Button(
-            actions,
-            text="Delete",
-            command=self.delete_user,
-            bg=COLORS["danger"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
-        ).grid(row=0, column=2, sticky="ew", padx=3)
-        tk.Button(
-            actions,
-            text="Clear",
-            command=self.clear_form,
-            bg=COLORS["secondary"],
-            fg="white",
-            relief="flat",
-            font=FONTS["button"],
-        ).grid(row=0, column=3, sticky="ew", padx=3)
+        self.create_button(actions, "Add", self.add_user, COLORS["success"]).grid(
+            row=0, column=0, sticky="ew", padx=3
+        )
+
+        self.create_button(actions, "Update", self.update_user, COLORS["warning"]).grid(
+            row=0, column=1, sticky="ew", padx=3
+        )
+
+        self.create_button(actions, "Delete", self.delete_user, COLORS["danger"]).grid(
+            row=0, column=2, sticky="ew", padx=3
+        )
+
+        self.create_button(actions, "Clear", self.clear_form, COLORS["secondary"]).grid(
+            row=0, column=3, sticky="ew", padx=3
+        )
 
         note = tk.Label(
             form,
@@ -145,22 +132,36 @@ class UsersFrame(BaseModuleFrame):
         )
         note.grid(row=9, column=0, sticky="w", padx=8, pady=(14, 0))
 
-        right = tk.Frame(content, bg=COLORS["panel"], bd=0, highlightthickness=1, highlightbackground="#22314f")
+        right = tk.Frame(
+            content,
+            bg=COLORS["panel"],
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#22314f",
+        )
         right.pack(side="right", fill="both", expand=True)
 
         table_wrap = tk.Frame(right, bg=COLORS["panel"], padx=10, pady=10)
         table_wrap.pack(fill="both", expand=True)
 
         columns = ["id", "username", "role", "created_at"]
-        self.tree = ttk.Treeview(table_wrap, columns=columns, show="headings", selectmode="browse")
+        self.tree = ttk.Treeview(
+            table_wrap, columns=columns, show="headings", selectmode="browse"
+        )
         widths = {"id": 70, "username": 180, "role": 100, "created_at": 160}
         self.configure_treeview(self.tree, columns, widths)
         for column in columns:
-            self.tree.heading(column, text=column.replace("_", " ").title(), command=lambda c=column: self.sort_by(c))
+            self.tree.heading(
+                column,
+                text=column.replace("_", " ").title(),
+                command=lambda c=column: self.sort_by(c),
+            )
         self.tree.bind("<<TreeviewSelect>>", self.on_select)
         self.tree.pack(side="left", fill="both", expand=True)
 
-        scrollbar = ttk.Scrollbar(table_wrap, orient="vertical", command=self.tree.yview)
+        scrollbar = ttk.Scrollbar(
+            table_wrap, orient="vertical", command=self.tree.yview
+        )
         self.tree.configure(yscrollcommand=scrollbar.set)
         scrollbar.pack(side="right", fill="y")
 
@@ -197,7 +198,9 @@ class UsersFrame(BaseModuleFrame):
             messagebox.showwarning("Validation Error", "Password is required.")
             return False
         if data["password"] != data["confirm_password"]:
-            messagebox.showwarning("Validation Error", "Password confirmation does not match.")
+            messagebox.showwarning(
+                "Validation Error", "Password confirmation does not match."
+            )
             return False
         return True
 
@@ -206,7 +209,9 @@ class UsersFrame(BaseModuleFrame):
             messagebox.showwarning("Validation Error", "Username is required.")
             return False
         if data["password"] and data["password"] != data["confirm_password"]:
-            messagebox.showwarning("Validation Error", "Password confirmation does not match.")
+            messagebox.showwarning(
+                "Validation Error", "Password confirmation does not match."
+            )
             return False
         return True
 
@@ -245,8 +250,14 @@ class UsersFrame(BaseModuleFrame):
         if self.selected_user_id is None:
             messagebox.showwarning("Selection Required", "Select a user to delete.")
             return
-        if self.app.current_user and self.app.current_user["id"] == self.selected_user_id:
-            messagebox.showwarning("Action Not Allowed", "You cannot delete the account you are currently logged into.")
+        if (
+            self.app.current_user
+            and self.app.current_user["id"] == self.selected_user_id
+        ):
+            messagebox.showwarning(
+                "Action Not Allowed",
+                "You cannot delete the account you are currently logged into.",
+            )
             return
         if not messagebox.askyesno("Confirm Delete", "Delete the selected user?"):
             return
@@ -259,10 +270,18 @@ class UsersFrame(BaseModuleFrame):
             messagebox.showerror("Error", str(exc))
 
     def load_data(self) -> None:
-        users = self.db.fetch_users(self.search_text_var.get(), self.search_field_var.get(), self.sort_column, self.sort_ascending)
+        users = self.db.fetch_users(
+            self.search_text_var.get(),
+            self.search_field_var.get(),
+            self.sort_column,
+            self.sort_ascending,
+        )
         self.fill_treeview(
             self.tree,
-            [(user["id"], user["username"], user["role"], user["created_at"]) for user in users],
+            [
+                (user["id"], user["username"], user["role"], user["created_at"])
+                for user in users
+            ],
         )
 
     def refresh_data(self) -> None:
@@ -285,6 +304,8 @@ class UsersFrame(BaseModuleFrame):
         if not user:
             return
         self.selected_user_id = user["id"]
-        self.clear_entries(self.username_entry, self.password_entry, self.confirm_password_entry)
+        self.clear_entries(
+            self.username_entry, self.password_entry, self.confirm_password_entry
+        )
         self.username_entry.insert(0, user["username"])
         self.role_var.set(user["role"])
