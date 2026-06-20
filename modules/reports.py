@@ -67,13 +67,7 @@ class ReportsFrame(BaseModuleFrame):
         self.summary_label.grid(row=0, column=4, padx=12, sticky="e")
         controls.columnconfigure(4, weight=1)
 
-        table_frame = tk.Frame(
-            self,
-            bg=COLORS["panel"],
-            bd=0,
-            highlightthickness=1,
-            highlightbackground="#22314f",
-        )
+        table_frame = self.create_panel(self)
         table_frame.pack(fill="both", expand=True, padx=24, pady=(0, 20))
 
         inner = tk.Frame(table_frame, bg=COLORS["panel"], padx=10, pady=10)

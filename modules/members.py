@@ -69,13 +69,7 @@ class MembersFrame(BaseModuleFrame):
         content = tk.Frame(self, bg=COLORS["bg"])
         content.pack(fill="both", expand=True, padx=24, pady=(0, 20))
 
-        left = tk.Frame(
-            content,
-            bg=COLORS["panel"],
-            bd=0,
-            highlightthickness=1,
-            highlightbackground="#22314f",
-        )
+        left = self.create_panel(content)
         left.pack(side="left", fill="y", padx=(0, 12))
         left.configure(width=440)
         left.pack_propagate(False)
@@ -114,13 +108,7 @@ class MembersFrame(BaseModuleFrame):
             action_row, "Clear", self.clear_form, COLORS["secondary"]
         ).grid(row=0, column=3, sticky="ew", padx=3)
 
-        right = tk.Frame(
-            content,
-            bg=COLORS["panel"],
-            bd=0,
-            highlightthickness=1,
-            highlightbackground="#22314f",
-        )
+        right = self.create_panel(content)
         right.pack(side="right", fill="both", expand=True)
 
         table_wrap = tk.Frame(right, bg=COLORS["panel"], padx=10, pady=10)

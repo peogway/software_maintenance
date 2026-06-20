@@ -30,23 +30,11 @@ class SettingsFrame(BaseModuleFrame):
         wrapper = tk.Frame(self, bg=COLORS["bg"])
         wrapper.pack(fill="both", expand=True, padx=24, pady=(0, 20))
 
-        left = tk.Frame(
-            wrapper,
-            bg=COLORS["panel"],
-            bd=0,
-            highlightthickness=1,
-            highlightbackground="#22314f",
-        )
+        left = self.create_panel(wrapper)
         left.pack(side="left", fill="both", expand=True, padx=(0, 12))
         left.configure(padx=16, pady=16)
 
-        right = tk.Frame(
-            wrapper,
-            bg=COLORS["panel"],
-            bd=0,
-            highlightthickness=1,
-            highlightbackground="#22314f",
-        )
+        right = self.create_panel(wrapper)
         right.pack(side="right", fill="both", expand=True)
         right.configure(padx=16, pady=16)
 

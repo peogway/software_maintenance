@@ -28,13 +28,8 @@ class IssueBooksFrame(BaseModuleFrame):
         top = tk.Frame(self, bg=COLORS["bg"])
         top.pack(fill="x", padx=24, pady=(0, 16))
 
-        issue_panel = tk.Frame(
-            top,
-            bg=COLORS["panel"],
-            bd=0,
-            highlightthickness=1,
-            highlightbackground="#22314f",
-        )
+        issue_panel = self.create_panel(top)
+
         issue_panel.pack(side="left", fill="both", expand=True, padx=(0, 12))
         issue_panel.configure(padx=18, pady=18)
 
@@ -78,13 +73,7 @@ class IssueBooksFrame(BaseModuleFrame):
             issue_panel, "Issue Book", self.issue_book, COLORS["primary"]
         ).grid(row=5, column=0, sticky="ew", padx=6, pady=(8, 0))
 
-        return_panel = tk.Frame(
-            top,
-            bg=COLORS["panel"],
-            bd=0,
-            highlightthickness=1,
-            highlightbackground="#22314f",
-        )
+        return_panel = self.create_panel(top)
         return_panel.pack(side="right", fill="both", expand=True)
         return_panel.configure(padx=18, pady=18)
 
@@ -113,16 +102,11 @@ class IssueBooksFrame(BaseModuleFrame):
             COLORS["success"],
         ).grid(row=2, column=0, sticky="ew", padx=6)
 
-        bottom = tk.Frame(
-            self,
-            bg=COLORS["panel"],
-            bd=0,
-            highlightthickness=1,
-            highlightbackground="#22314f",
-        )
+        bottom = self.create_panel(self)
         bottom.pack(fill="both", expand=True, padx=24, pady=(0, 20))
 
-        table_wrap = tk.Frame(bottom, bg=COLORS["panel"], padx=10, pady=10)
+        table_wrap = self.create_panel(bottom)
+        table_wrap.configure(padx=10, pady=10)
         table_wrap.pack(fill="both", expand=True)
 
         columns = [

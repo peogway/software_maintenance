@@ -92,13 +92,8 @@ class BaseModuleFrame(tk.Frame):
     def build_card(
         self, parent: tk.Widget, title: str, value: str, accent: str
     ) -> tk.Frame:
-        card = tk.Frame(
-            parent,
-            bg=COLORS["card"],
-            bd=0,
-            highlightthickness=1,
-            highlightbackground="#22314f",
-        )
+        card = self.create_panel(parent)
+        card.configure(bg=COLORS["card"])
         card.pack_propagate(False)
 
         accent_bar = tk.Frame(card, bg=accent, height=4)
