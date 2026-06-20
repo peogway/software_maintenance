@@ -379,36 +379,23 @@ class LibraryDatabase:
             max_number = max(max_number, number)
         return f"{prefix}{max_number + 1:0{width}d}"
 
-    def generate_book_code(self) -> str:
+    def _generate_code(self, table: str, column: str, prefix: str) -> str:
         with self._connection() as connection:
             rows = connection.execute(
-                "SELECT book_code FROM books ORDER BY id DESC"
+                f"SELECT {column} FROM {table} ORDER BY id DESC"
             ).fetchall()
-        return self._next_code("BK", [row["book_code"] for row in rows])
+
+        return self._next_code(prefix, [row[column] for row in rows])
+
+    def generate_book_code(self) -> str:
+        return self._generate_code("books", "book_code", "BK")
 
     def generate_member_code(self) -> str:
-        with self._connection() as connection:
-            rows = connection.execute(
-                "SELECT member_code FROM members ORDER BY id DESC"
-            ).fetchall()
-        return self._next_code("MB", [row["member_code"] for row in rows])
+        return self._generate_code("members", "member_code", "MB")
 
     def generate_student_code(self) -> str:
-        with self._connection() as connection:
-            rows = connection.execute(
-                "SELECT student_code FROM students ORDER BY id DESC"
-            ).fetchall()
-        return self._next_code("ST", [row["student_code"] for row in rows])
-
-    def _book_exists_with_isbn(self, isbn: str, exclude_id: Optional[int] = None) -> bool:
-        query = "SELECT 1 FROM books WHERE isbn = ?"
-        params: Tuple[Any, ...] = (isbn.strip(),)
-        if exclude_id is not None:
-            query += " AND id != ?"
-            params = (isbn.strip(), exclude_id)
-        with self._connection() as connection:
-            row = connection.execute(query, params).fetchone()
-        return row is not None
+        return self._generate_code("students", "student_code", "ST")
+    
 
     def add_book(self, data: Dict[str, Any]) -> int:
         isbn = data["isbn"].strip()
