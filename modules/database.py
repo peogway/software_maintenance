@@ -523,33 +523,14 @@ class LibraryDatabase:
         return self._get_by_field("books", "id", book_id)
 
     def get_book_by_code(self, book_code: str) -> Optional[Dict[str, Any]]:
-        with self._connection() as connection:
-            row = connection.execute(
-                "SELECT * FROM books WHERE book_code = ?",
-                (book_code.strip(),),
-            ).fetchone()
-        return dict(row) if row else None
+        return self._get_by_field("books", "book_code", book_code)
 
-    def _member_exists(self, member_code: str, email: Optional[str], phone: Optional[str], exclude_id: Optional[int] = None) -> bool:
-        clauses = ["member_code = ?"]
-        params: List[Any] = [member_code.strip()]
-        if email:
-            clauses.append("email = ?")
-            params.append(email.strip())
-        if phone:
-            clauses.append("phone = ?")
-            params.append(phone.strip())
 
-        query = "SELECT 1 FROM members WHERE (" + " OR ".join(clauses) + ")"
-        if exclude_id is not None:
-            query += " AND id != ?"
-            params.append(exclude_id)
-
-        with self._connection() as connection:
-            row = connection.execute(query, params).fetchone()
-        return row is not None
-
-    def add_member(self, data: Dict[str, Any]) -> int:
+    def save_member(
+        self,
+        data: Dict[str, Any],
+        member_id: Optional[int] = None,
+    ) -> Optional[int]:
         member_code = data.get("member_code") or self.generate_member_code()
         email = data.get("email", "").strip() or None
         phone = data.get("phone", "").strip() or None
@@ -602,6 +583,14 @@ class LibraryDatabase:
                 ),
             )
 
+        return None
+
+    def add_member(self, data: Dict[str, Any]) -> int:
+        return self.save_member(data)
+
+    def update_member(self, member_id: int, data: Dict[str, Any]) -> None:
+        self.save_member(data, member_id)
+
     def delete_member(self, member_id: int) -> None:
         with self._connection() as connection:
             active_issue = connection.execute(
@@ -643,122 +632,68 @@ class LibraryDatabase:
 
     def save_student(
         self,
-        student_code: str,
-        roll_no: str,
-        email: Optional[str],
-        phone: Optional[str],
-        exclude_id: Optional[int] = None,
-    ) -> bool:
-        clauses = ["student_code = ?", "roll_no = ?"]
-        params: List[Any] = [student_code.strip(), roll_no.strip()]
-        if email:
-            clauses.append("email = ?")
-            params.append(email.strip())
-        if phone:
-            clauses.append("phone = ?")
-            params.append(phone.strip())
+        data: Dict[str, Any],
+        student_id: Optional[int] = None,
+        account: Optional[Dict[str, Any]] = None,
+    ) -> Optional[int]:
 
-        query = "SELECT 1 FROM students WHERE (" + " OR ".join(clauses) + ")"
-        if exclude_id is not None:
-            query += " AND id != ?"
-            params.append(exclude_id)
-
-        with self._connection() as connection:
-            row = connection.execute(query, params).fetchone()
-        return row is not None
-
-    def add_student(self, data: Dict[str, Any], account: Optional[Dict[str, Any]] = None) -> int:
-        student_code = data.get("student_code") or self.generate_student_code()
         email = data.get("email", "").strip() or None
         phone = data.get("phone", "").strip() or None
 
         with self._connection() as connection:
-            user_id = None
-            if account:
-                username = account.get("username", "").strip()
-                password = account.get("password", "")
-                role = account.get("role", "student").strip() or "student"
-                existing_user = connection.execute(
-                    "SELECT 1 FROM users WHERE username = ?",
-                    (username,),
+
+            current_user_id = None
+
+            if student_id:
+                current = connection.execute(
+                    "SELECT id, user_id FROM students WHERE id = ?",
+                    (student_id,),
                 ).fetchone()
-                if existing_user:
-                    raise ValueError("A user with this username already exists.")
-                user_id = self._create_user_record(connection, username, password, role).lastrowid
 
-            if self._student_exists(student_code, data["roll_no"], email, phone):
-                raise ValueError("A student with the same code, roll number, email, or phone already exists.")
+                if not current:
+                    raise ValueError("Student not found.")
 
-            cursor = connection.execute(
-                """
-                INSERT INTO students (
-                    student_code, full_name, class_name, section, roll_no, email, phone, address, user_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    student_code.strip(),
-                    data["full_name"].strip(),
-                    data["class_name"].strip(),
-                    data.get("section", "").strip() or None,
-                    data["roll_no"].strip(),
-                    email,
-                    phone,
-                    data["address"].strip(),
-                    user_id,
-                ),
-            )
-            return cursor.lastrowid
+                current_user_id = current["user_id"]
 
-    def update_student(self, student_id: int, data: Dict[str, Any], account: Optional[Dict[str, Any]] = None) -> None:
-        email = data.get("email", "").strip() or None
-        phone = data.get("phone", "").strip() or None
+            user_id = current_user_id
 
-        with self._connection() as connection:
-            current = connection.execute(
-                "SELECT id, user_id FROM students WHERE id = ?",
-                (student_id,),
-            ).fetchone()
-            if not current:
-                raise ValueError("Student not found.")
-
-            user_id = current["user_id"]
             if account:
                 username = account.get("username", "").strip()
                 password = account.get("password", "")
                 role = account.get("role", "student").strip() or "student"
+
                 if user_id:
-                    duplicate_user = connection.execute(
+                    duplicate = connection.execute(
                         "SELECT 1 FROM users WHERE username = ? AND id != ?",
                         (username, user_id),
                     ).fetchone()
-                    if duplicate_user:
-                        raise ValueError("A user with this username already exists.")
+
+                    if duplicate:
+                        raise ValueError("Username already exists.")
+
                     if password:
                         connection.execute(
-                            """
-                            UPDATE users
-                            SET username = ?, role = ?, password_hash = ?
-                            WHERE id = ?
-                            """,
+                            "UPDATE users SET username = ?, role = ?, password_hash = ? WHERE id = ?",
                             (username, role, self.hash_password(password), user_id),
                         )
                     else:
                         connection.execute(
-                            """
-                            UPDATE users
-                            SET username = ?, role = ?
-                            WHERE id = ?
-                            """,
+                            "UPDATE users SET username = ?, role = ? WHERE id = ?",
                             (username, role, user_id),
                         )
+
                 else:
-                    existing_user = connection.execute(
+                    existing = connection.execute(
                         "SELECT 1 FROM users WHERE username = ?",
                         (username,),
                     ).fetchone()
-                    if existing_user:
-                        raise ValueError("A user with this username already exists.")
-                    user_id = self._create_user_record(connection, username, password, role).lastrowid
+
+                    if existing:
+                        raise ValueError("Username already exists.")
+
+                    user_id = self._create_user_record(
+                        connection, username, password, role
+                    ).lastrowid
 
             if student_id:
                 if self._exists_any(
@@ -773,26 +708,72 @@ class LibraryDatabase:
                 ):
                     raise ValueError("Duplicate student found.")
 
-            connection.execute(
-                """
-                UPDATE students
-                SET student_code = ?, full_name = ?, class_name = ?, section = ?, roll_no = ?,
-                    email = ?, phone = ?, address = ?, user_id = ?
-                WHERE id = ?
-                """,
-                (
-                    data["student_code"].strip(),
-                    data["full_name"].strip(),
-                    data["class_name"].strip(),
-                    data.get("section", "").strip() or None,
-                    data["roll_no"].strip(),
-                    email,
-                    phone,
-                    data["address"].strip(),
-                    user_id,
-                    student_id,
-                ),
-            )
+                connection.execute(
+                    """
+                    UPDATE students
+                    SET student_code = ?, full_name = ?, class_name = ?, section = ?,
+                        roll_no = ?, email = ?, phone = ?, address = ?, user_id = ?
+                    WHERE id = ?
+                    """,
+                    (
+                        data["student_code"].strip(),
+                        data["full_name"].strip(),
+                        data["class_name"].strip(),
+                        data.get("section", "").strip() or None,
+                        data["roll_no"].strip(),
+                        email,
+                        phone,
+                        data["address"].strip(),
+                        user_id,
+                        student_id,
+                    ),
+                )
+                return None
+
+            else:
+                student_code = data.get("student_code") or self.generate_student_code()
+                if self._exists_any(
+                    "students",
+                    {
+                        "student_code": student_code,
+                        "roll_no": data["roll_no"],
+                        "email": email,
+                        "phone": phone,
+                    }
+                ):
+                    raise ValueError("Duplicate student found.")
+
+                cursor = connection.execute(
+                    """
+                    INSERT INTO students (
+                        student_code, full_name, class_name, section,
+                        roll_no, email, phone, address, user_id
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        student_code,
+                        data["full_name"].strip(),
+                        data["class_name"].strip(),
+                        data.get("section", "").strip() or None,
+                        data["roll_no"].strip(),
+                        email,
+                        phone,
+                        data["address"].strip(),
+                        user_id,
+                    ),
+                )
+
+                return cursor.lastrowid
+
+
+    def add_student(self, data, account=None):
+        return self.save_student(data, None, account)
+
+
+    def update_student(self, student_id, data, account=None):
+        return self.save_student(data, student_id, account)
+
 
     def delete_student(self, student_id: int) -> None:
         with self._connection() as connection:
