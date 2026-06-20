@@ -73,11 +73,9 @@ class ReportsFrame(BaseModuleFrame):
         inner = tk.Frame(table_frame, bg=COLORS["panel"], padx=10, pady=10)
         inner.pack(fill="both", expand=True)
 
-        self.tree = ttk.Treeview(inner, show="headings")
-        self.tree.pack(side="left", fill="both", expand=True)
+        self.tree, scrollbar = self.build_treeview(inner, self.current_columns)
 
-        scrollbar = ttk.Scrollbar(inner, orient="vertical", command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scrollbar.set)
+        self.tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
     def _report_definitions(self) -> dict:

@@ -133,24 +133,21 @@ class UsersFrame(BaseModuleFrame):
         table_wrap.pack(fill="both", expand=True)
 
         columns = ["id", "username", "role", "created_at"]
-        self.tree = ttk.Treeview(
-            table_wrap, columns=columns, show="headings", selectmode="browse"
-        )
+
         widths = {"id": 70, "username": 180, "role": 100, "created_at": 160}
-        self.configure_treeview(self.tree, columns, widths)
+
+        self.tree, scrollbar = self.build_treeview(table_wrap, columns, widths)
+
         for column in columns:
             self.tree.heading(
                 column,
                 text=column.replace("_", " ").title(),
                 command=lambda c=column: self.sort_by(c),
             )
-        self.tree.bind("<<TreeviewSelect>>", self.on_select)
-        self.tree.pack(side="left", fill="both", expand=True)
 
-        scrollbar = ttk.Scrollbar(
-            table_wrap, orient="vertical", command=self.tree.yview
-        )
-        self.tree.configure(yscrollcommand=scrollbar.set)
+        self.tree.bind("<<TreeviewSelect>>", self.on_select)
+
+        self.tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
         form.columnconfigure(0, weight=1)

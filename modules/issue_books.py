@@ -121,9 +121,7 @@ class IssueBooksFrame(BaseModuleFrame):
             "status",
             "fine_amount",
         ]
-        self.tree = ttk.Treeview(
-            table_wrap, columns=columns, show="headings", selectmode="browse"
-        )
+
         widths = {
             "id": 60,
             "book_code": 90,
@@ -136,14 +134,12 @@ class IssueBooksFrame(BaseModuleFrame):
             "status": 90,
             "fine_amount": 90,
         }
-        self.configure_treeview(self.tree, columns, widths)
-        self.tree.bind("<<TreeviewSelect>>", self.on_select)
-        self.tree.pack(side="left", fill="both", expand=True)
 
-        scrollbar = ttk.Scrollbar(
-            table_wrap, orient="vertical", command=self.tree.yview
-        )
-        self.tree.configure(yscrollcommand=scrollbar.set)
+        self.tree, scrollbar = self.build_treeview(table_wrap, columns, widths)
+
+        self.tree.bind("<<TreeviewSelect>>", self.on_select)
+
+        self.tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
         issue_panel.columnconfigure((0, 1), weight=1)
