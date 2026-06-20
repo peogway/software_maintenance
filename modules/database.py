@@ -520,12 +520,7 @@ class LibraryDatabase:
         )
 
     def get_book_by_id(self, book_id: int) -> Optional[Dict[str, Any]]:
-        with self._connection() as connection:
-            row = connection.execute(
-                "SELECT * FROM books WHERE id = ?",
-                (book_id,),
-            ).fetchone()
-        return dict(row) if row else None
+        return self._get_by_field("books", "id", book_id)
 
     def get_book_by_code(self, book_code: str) -> Optional[Dict[str, Any]]:
         with self._connection() as connection:
@@ -639,22 +634,14 @@ class LibraryDatabase:
         )
 
     def get_member_by_id(self, member_id: int) -> Optional[Dict[str, Any]]:
-        with self._connection() as connection:
-            row = connection.execute(
-                "SELECT * FROM members WHERE id = ?",
-                (member_id,),
-            ).fetchone()
-        return dict(row) if row else None
+        return self._get_by_field("members", "id", member_id)
 
     def get_member_by_code(self, member_code: str) -> Optional[Dict[str, Any]]:
-        with self._connection() as connection:
-            row = connection.execute(
-                "SELECT * FROM members WHERE member_code = ?",
-                (member_code.strip(),),
-            ).fetchone()
-        return dict(row) if row else None
+        return self._get_by_field("members", "member_code", member_code)
 
-    def _student_exists(
+
+
+    def save_student(
         self,
         student_code: str,
         roll_no: str,
