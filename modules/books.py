@@ -56,11 +56,11 @@ class BooksFrame(BaseModuleFrame):
         )
         self.search_entry.grid(row=0, column=3, padx=6, pady=6)
 
-        self.create_button(
-            search_bar, "Search", self.load_data, COLORS["primary"]
-        ).grid(row=0, column=4, padx=6)
+        self.build_button(search_bar, "Search", self.load_data, COLORS["primary"]).grid(
+            row=0, column=4, padx=6
+        )
 
-        self.create_button(
+        self.build_button(
             search_bar, "Reset", self._reset_search, COLORS["secondary"]
         ).grid(row=0, column=5, padx=6)
 
@@ -69,7 +69,7 @@ class BooksFrame(BaseModuleFrame):
         content = tk.Frame(self, bg=COLORS["bg"])
         content.pack(fill="both", expand=True, padx=24, pady=(0, 20))
 
-        left = self.create_panel(content)
+        left = self.build_panel(content)
         left.pack(side="left", fill="y", padx=(0, 12))
         left.configure(width=440)
         left.pack_propagate(False)
@@ -94,23 +94,23 @@ class BooksFrame(BaseModuleFrame):
         )
         action_row.columnconfigure((0, 1, 2, 3), weight=1)
 
-        self.create_button(action_row, "Add", self.add_book, COLORS["success"]).grid(
+        self.build_button(action_row, "Add", self.add_book, COLORS["success"]).grid(
             row=0, column=0, sticky="ew", padx=3
         )
 
-        self.create_button(
+        self.build_button(
             action_row, "Update", self.update_book, COLORS["warning"]
         ).grid(row=0, column=1, sticky="ew", padx=3)
 
-        self.create_button(
+        self.build_button(
             action_row, "Delete", self.delete_book, COLORS["danger"]
         ).grid(row=0, column=2, sticky="ew", padx=3)
 
-        self.create_button(
+        self.build_button(
             action_row, "Clear", self.clear_form, COLORS["secondary"]
         ).grid(row=0, column=3, sticky="ew", padx=3)
 
-        right = self.create_panel(content)
+        right = self.build_panel(content)
         right.pack(side="right", fill="both", expand=True)
 
         table_wrap = tk.Frame(right, bg=COLORS["panel"], padx=10, pady=10)

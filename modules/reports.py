@@ -49,11 +49,11 @@ class ReportsFrame(BaseModuleFrame):
         )
         self.report_combo.grid(row=0, column=1, padx=6)
 
-        self.create_button(
+        self.build_button(
             controls, "Load Report", self.load_report, COLORS["primary"]
         ).grid(row=0, column=2, padx=6)
 
-        self.create_button(
+        self.build_button(
             controls, "Export CSV", self.export_csv, COLORS["success"]
         ).grid(row=0, column=3, padx=6)
 
@@ -67,7 +67,7 @@ class ReportsFrame(BaseModuleFrame):
         self.summary_label.grid(row=0, column=4, padx=12, sticky="e")
         controls.columnconfigure(4, weight=1)
 
-        table_frame = self.create_panel(self)
+        table_frame = self.build_panel(self)
         table_frame.pack(fill="both", expand=True, padx=24, pady=(0, 20))
 
         inner = tk.Frame(table_frame, bg=COLORS["panel"], padx=10, pady=10)

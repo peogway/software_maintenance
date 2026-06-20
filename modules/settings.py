@@ -30,11 +30,11 @@ class SettingsFrame(BaseModuleFrame):
         wrapper = tk.Frame(self, bg=COLORS["bg"])
         wrapper.pack(fill="both", expand=True, padx=24, pady=(0, 20))
 
-        left = self.create_panel(wrapper)
+        left = self.build_panel(wrapper)
         left.pack(side="left", fill="both", expand=True, padx=(0, 12))
         left.configure(padx=16, pady=16)
 
-        right = self.create_panel(wrapper)
+        right = self.build_panel(wrapper)
         right.pack(side="right", fill="both", expand=True)
         right.configure(padx=16, pady=16)
 
@@ -58,11 +58,11 @@ class SettingsFrame(BaseModuleFrame):
         button_row = tk.Frame(form, bg=COLORS["panel"])
         button_row.grid(row=8, column=0, sticky="ew", padx=8, pady=(10, 0))
         button_row.columnconfigure((0, 1), weight=1)
-        self.create_button(
+        self.build_button(
             button_row, "Save Library Info", self.save_library_info, COLORS["primary"]
         ).grid(row=0, column=0, sticky="ew", padx=4)
 
-        self.create_button(
+        self.build_button(
             button_row, "Backup Database", self.backup_database, COLORS["success"]
         ).grid(row=0, column=1, sticky="ew", padx=4)
 
@@ -91,11 +91,11 @@ class SettingsFrame(BaseModuleFrame):
         security_buttons.grid(row=6, column=0, sticky="ew", padx=8, pady=(10, 0))
         security_buttons.columnconfigure((0, 1), weight=1)
 
-        self.create_button(
+        self.build_button(
             security_buttons, "Change Password", self.change_password, COLORS["warning"]
         ).grid(row=0, column=0, sticky="ew", padx=4)
 
-        self.create_button(
+        self.build_button(
             security_buttons,
             "Restore Database",
             self.restore_database,

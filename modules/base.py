@@ -44,7 +44,7 @@ class BaseModuleFrame(tk.Frame):
         self._sort_column = None
         self._sort_ascending = True
 
-    def create_button(self, parent, text, command, color):
+    def build_button(self, parent, text, command, color):
         return tk.Button(
             parent,
             text=text,
@@ -55,7 +55,7 @@ class BaseModuleFrame(tk.Frame):
             font=FONTS["button"],
         )
 
-    def create_panel(self, parent):
+    def build_panel(self, parent):
         return tk.Frame(
             parent,
             bg=COLORS["panel"],
@@ -105,7 +105,7 @@ class BaseModuleFrame(tk.Frame):
     def build_card(
         self, parent: tk.Widget, title: str, value: str, accent: str
     ) -> tk.Frame:
-        card = self.create_panel(parent)
+        card = self.build_panel(parent)
         card.configure(bg=COLORS["card"])
         card.pack_propagate(False)
 

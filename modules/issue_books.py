@@ -28,7 +28,7 @@ class IssueBooksFrame(BaseModuleFrame):
         top = tk.Frame(self, bg=COLORS["bg"])
         top.pack(fill="x", padx=24, pady=(0, 16))
 
-        issue_panel = self.create_panel(top)
+        issue_panel = self.build_panel(top)
 
         issue_panel.pack(side="left", fill="both", expand=True, padx=(0, 12))
         issue_panel.configure(padx=18, pady=18)
@@ -69,11 +69,11 @@ class IssueBooksFrame(BaseModuleFrame):
             row=4, column=0, sticky="ew", padx=6, pady=(0, 10), columnspan=2
         )
 
-        self.create_button(
+        self.build_button(
             issue_panel, "Issue Book", self.issue_book, COLORS["primary"]
         ).grid(row=5, column=0, sticky="ew", padx=6, pady=(8, 0))
 
-        return_panel = self.create_panel(top)
+        return_panel = self.build_panel(top)
         return_panel.pack(side="right", fill="both", expand=True)
         return_panel.configure(padx=18, pady=18)
 
@@ -95,17 +95,17 @@ class IssueBooksFrame(BaseModuleFrame):
         )
         self.issue_id_label.grid(row=1, column=0, sticky="w", padx=6, pady=(0, 14))
 
-        self.create_button(
+        self.build_button(
             return_panel,
             "Return Selected",
             self.return_selected_book,
             COLORS["success"],
         ).grid(row=2, column=0, sticky="ew", padx=6)
 
-        bottom = self.create_panel(self)
+        bottom = self.build_panel(self)
         bottom.pack(fill="both", expand=True, padx=24, pady=(0, 20))
 
-        table_wrap = self.create_panel(bottom)
+        table_wrap = self.build_panel(bottom)
         table_wrap.configure(padx=10, pady=10)
         table_wrap.pack(fill="both", expand=True)
 

@@ -56,11 +56,11 @@ class UsersFrame(BaseModuleFrame):
         )
         self.search_entry.grid(row=0, column=3, padx=6, pady=6)
 
-        self.create_button(controls, "Search", self.load_data, COLORS["primary"]).grid(
+        self.build_button(controls, "Search", self.load_data, COLORS["primary"]).grid(
             row=0, column=4, padx=6
         )
 
-        self.create_button(
+        self.build_button(
             controls, "Reset", self._reset_search, COLORS["secondary"]
         ).grid(row=0, column=5, padx=6)
 
@@ -69,7 +69,7 @@ class UsersFrame(BaseModuleFrame):
         content = tk.Frame(self, bg=COLORS["bg"])
         content.pack(fill="both", expand=True, padx=24, pady=(0, 20))
 
-        left = self.create_panel(content)
+        left = self.build_panel(content)
         left.pack(side="left", fill="y", padx=(0, 12))
         left.configure(width=440)
         left.pack_propagate(False)
@@ -99,19 +99,19 @@ class UsersFrame(BaseModuleFrame):
         actions.grid(row=8, column=0, sticky="ew", padx=8, pady=(12, 0))
         actions.columnconfigure((0, 1, 2, 3), weight=1)
 
-        self.create_button(actions, "Add", self.add_user, COLORS["success"]).grid(
+        self.build_button(actions, "Add", self.add_user, COLORS["success"]).grid(
             row=0, column=0, sticky="ew", padx=3
         )
 
-        self.create_button(actions, "Update", self.update_user, COLORS["warning"]).grid(
+        self.build_button(actions, "Update", self.update_user, COLORS["warning"]).grid(
             row=0, column=1, sticky="ew", padx=3
         )
 
-        self.create_button(actions, "Delete", self.delete_user, COLORS["danger"]).grid(
+        self.build_button(actions, "Delete", self.delete_user, COLORS["danger"]).grid(
             row=0, column=2, sticky="ew", padx=3
         )
 
-        self.create_button(actions, "Clear", self.clear_form, COLORS["secondary"]).grid(
+        self.build_button(actions, "Clear", self.clear_form, COLORS["secondary"]).grid(
             row=0, column=3, sticky="ew", padx=3
         )
 
@@ -126,7 +126,7 @@ class UsersFrame(BaseModuleFrame):
         )
         note.grid(row=9, column=0, sticky="w", padx=8, pady=(14, 0))
 
-        right = self.create_panel(content)
+        right = self.build_panel(content)
         right.pack(side="right", fill="both", expand=True)
 
         table_wrap = tk.Frame(right, bg=COLORS["panel"], padx=10, pady=10)
