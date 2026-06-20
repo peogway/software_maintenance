@@ -289,6 +289,35 @@ class LibraryDatabase:
             )
         return True
 
+
+    def _fetch_records(
+        self,
+        table: str,
+        search_text: str,
+        search_field: str,
+        order_by: str,
+        ascending: bool,
+        allowed_fields: set[str],
+        allowed_order: set[str],
+    ) -> List[Dict[str, Any]]:
+        field = search_field if search_field in allowed_fields else sorted(allowed_fields)[0]
+        order = order_by if order_by in allowed_order else sorted(allowed_order)[0]
+        direction = "ASC" if ascending else "DESC"
+
+        params: List[Any] = []
+        query = f"SELECT * FROM {table}"
+
+        if search_text.strip():
+            query += f" WHERE {field} LIKE ?"
+            params.append(f"%{search_text.strip()}%")
+
+        query += f" ORDER BY {order} {direction}"
+
+        with self._connection() as connection:
+            rows = connection.execute(query, params).fetchall()
+
+        return [dict(row) for row in rows]
+
     def fetch_users(
         self,
         search_text: str = "",
@@ -296,20 +325,15 @@ class LibraryDatabase:
         order_by: str = "created_at",
         ascending: bool = True,
     ) -> List[Dict[str, Any]]:
-        allowed_fields = {"username", "role", "created_at"}
-        allowed_order = {"id", "username", "role", "created_at"}
-        field = search_field if search_field in allowed_fields else "username"
-        order = order_by if order_by in allowed_order else "created_at"
-        direction = "ASC" if ascending else "DESC"
-        params: List[Any] = []
-        query = "SELECT id, username, role, created_at FROM users"
-        if search_text.strip():
-            query += f" WHERE {field} LIKE ?"
-            params.append(f"%{search_text.strip()}%")
-        query += f" ORDER BY {order} {direction}"
-        with self._connection() as connection:
-            rows = connection.execute(query, params).fetchall()
-        return [dict(row) for row in rows]
+        return self._fetch_records(
+            table="users",
+            search_text=search_text,
+            search_field=search_field,
+            order_by=order_by,
+            ascending=ascending,
+            allowed_fields={"username", "role", "created_at"},
+            allowed_order={"id", "username", "role", "created_at"},
+        )
 
     def update_user(self, user_id: int, username: str, role: str, password: Optional[str] = None) -> None:
         with self._connection() as connection:
@@ -479,6 +503,7 @@ class LibraryDatabase:
                 raise ValueError("Cannot delete a book that is currently issued.")
             connection.execute("DELETE FROM books WHERE id = ?", (book_id,))
 
+
     def fetch_books(
         self,
         search_text: str = "",
@@ -486,31 +511,26 @@ class LibraryDatabase:
         order_by: str = "title",
         ascending: bool = True,
     ) -> List[Dict[str, Any]]:
-        allowed_fields = {"title", "author", "isbn", "category"}
-        allowed_order = {
-            "book_code",
-            "title",
-            "author",
-            "category",
-            "publisher",
-            "isbn",
-            "quantity",
-            "available_quantity",
-            "shelf_location",
-            "added_date",
-        }
-        field = search_field if search_field in allowed_fields else "title"
-        order = order_by if order_by in allowed_order else "title"
-        direction = "ASC" if ascending else "DESC"
-        params: List[Any] = []
-        query = "SELECT * FROM books"
-        if search_text.strip():
-            query += f" WHERE {field} LIKE ?"
-            params.append(f"%{search_text.strip()}%")
-        query += f" ORDER BY {order} {direction}"
-        with self._connection() as connection:
-            rows = connection.execute(query, params).fetchall()
-        return [dict(row) for row in rows]
+        return self._fetch_records(
+            table="books",
+            search_text=search_text,
+            search_field=search_field,
+            order_by=order_by,
+            ascending=ascending,
+            allowed_fields={"title", "author", "isbn", "category"},
+            allowed_order={
+                "book_code",
+                "title",
+                "author",
+                "category",
+                "publisher",
+                "isbn",
+                "quantity",
+                "available_quantity",
+                "shelf_location",
+                "added_date",
+            },
+        )
 
     def get_book_by_id(self, book_id: int) -> Optional[Dict[str, Any]]:
         with self._connection() as connection:
@@ -621,20 +641,15 @@ class LibraryDatabase:
         order_by: str = "name",
         ascending: bool = True,
     ) -> List[Dict[str, Any]]:
-        allowed_fields = {"name", "member_code", "phone"}
-        allowed_order = {"member_code", "name", "email", "phone", "address", "join_date"}
-        field = search_field if search_field in allowed_fields else "name"
-        order = order_by if order_by in allowed_order else "name"
-        direction = "ASC" if ascending else "DESC"
-        params: List[Any] = []
-        query = "SELECT * FROM members"
-        if search_text.strip():
-            query += f" WHERE {field} LIKE ?"
-            params.append(f"%{search_text.strip()}%")
-        query += f" ORDER BY {order} {direction}"
-        with self._connection() as connection:
-            rows = connection.execute(query, params).fetchall()
-        return [dict(row) for row in rows]
+        return self._fetch_records(
+            table="members",
+            search_text=search_text,
+            search_field=search_field,
+            order_by=order_by,
+            ascending=ascending,
+            allowed_fields={"name", "member_code", "phone"},
+            allowed_order={"member_code", "name", "email", "phone", "address", "join_date"},
+        )
 
     def get_member_by_id(self, member_id: int) -> Optional[Dict[str, Any]]:
         with self._connection() as connection:
