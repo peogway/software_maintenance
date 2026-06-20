@@ -206,8 +206,35 @@ class LibraryDatabase:
             """,
             (username_clean, password_hash, role.strip() or "staff"),
         )
+    
+    def _exists_any(
+        self,
+        table: str,
+        conditions: Dict[str, Any],
+        exclude_id: Optional[int] = None,
+        id_field: str = "id",
+    ) -> bool:
+        clauses = []
+        params = []
 
-    def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
+        for k, v in conditions.items():
+            if v is not None and v != "":
+                clauses.append(f"{k} = ?")
+                params.append(str(v).strip())
+
+        if not clauses: 
+            raise ValueError("No conditions provided.")
+        
+        ALLOWED_TABLES = {"members", "students", "books"}
+        if table not in ALLOWED_TABLES:
+            raise ValueError('Invalid query')
+        
+        query = f"SELECT 1 FROM {table} WHERE (" + " OR ".join(clauses) + ")"
+
+        if exclude_id is not None:
+            query += f" AND {id_field} != ?"
+            params.append(exclude_id)
+
         with self._connection() as connection:
             row = connection.execute(
                 "SELECT * FROM users WHERE id = ?",
@@ -342,7 +369,10 @@ class LibraryDatabase:
 
     def add_book(self, data: Dict[str, Any]) -> int:
         isbn = data["isbn"].strip()
-        if self._book_exists_with_isbn(isbn):
+        if self._exists_any(
+            "books",
+            { "isbn": isbn }
+        ):
             raise ValueError("A book with this ISBN already exists.")
 
         book_code = data.get("book_code") or self.generate_book_code()
@@ -373,7 +403,11 @@ class LibraryDatabase:
             return cursor.lastrowid
 
     def update_book(self, book_id: int, data: Dict[str, Any]) -> None:
-        if self._book_exists_with_isbn(data["isbn"], exclude_id=book_id):
+        if self._exists_any(
+            "books",
+            { "isbn": data["isbn"].strip() }, 
+            exclude_id=book_id
+        ):
             raise ValueError("A book with this ISBN already exists.")
 
         with self._connection() as connection:
@@ -498,32 +532,39 @@ class LibraryDatabase:
         member_code = data.get("member_code") or self.generate_member_code()
         email = data.get("email", "").strip() or None
         phone = data.get("phone", "").strip() or None
-        if self._member_exists(member_code, email, phone):
-            raise ValueError("A member with the same code, email, or phone already exists.")
 
-        with self._connection() as connection:
-            cursor = connection.execute(
-                """
-                INSERT INTO members (member_code, name, email, phone, address)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (
-                    member_code.strip(),
-                    data["name"].strip(),
-                    email,
-                    phone,
-                    data["address"].strip(),
-                ),
+        if self._exists_any(
+                "members",
+                {
+                    "member_code": member_code,
+                    "email": email,
+                    "phone": phone
+                },
+                exclude_id=member_id,
+            ):
+            raise ValueError(
+                "A member with the same code, email, or phone already exists."
             )
-            return cursor.lastrowid
-
-    def update_member(self, member_id: int, data: Dict[str, Any]) -> None:
-        email = data.get("email", "").strip() or None
-        phone = data.get("phone", "").strip() or None
-        if self._member_exists(data["member_code"], email, phone, exclude_id=member_id):
-            raise ValueError("A member with the same code, email, or phone already exists.")
 
         with self._connection() as connection:
+            if member_id is None:
+                cursor = connection.execute(
+                    """
+                    INSERT INTO members (
+                        member_code, name, email, phone, address
+                    )
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (
+                        member_code.strip(),
+                        data["name"].strip(),
+                        email,
+                        phone,
+                        data["address"].strip(),
+                    ),
+                )
+                return cursor.lastrowid
+
             connection.execute(
                 """
                 UPDATE members
@@ -531,7 +572,7 @@ class LibraryDatabase:
                 WHERE id = ?
                 """,
                 (
-                    data["member_code"].strip(),
+                    member_code.strip(),
                     data["name"].strip(),
                     email,
                     phone,
@@ -711,8 +752,18 @@ class LibraryDatabase:
                         raise ValueError("A user with this username already exists.")
                     user_id = self._create_user_record(connection, username, password, role).lastrowid
 
-            if self._student_exists(data["student_code"], data["roll_no"], email, phone, exclude_id=student_id):
-                raise ValueError("A student with the same code, roll number, email, or phone already exists.")
+            if student_id:
+                if self._exists_any(
+                    "students",
+                    {
+                        "student_code": data["student_code"],
+                        "roll_no": data["roll_no"],
+                        "email": email,
+                        "phone": phone,
+                    },
+                    exclude_id=student_id,
+                ):
+                    raise ValueError("Duplicate student found.")
 
             connection.execute(
                 """
