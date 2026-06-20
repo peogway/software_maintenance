@@ -236,19 +236,38 @@ class LibraryDatabase:
             params.append(exclude_id)
 
         with self._connection() as connection:
-            row = connection.execute(
-                "SELECT * FROM users WHERE id = ?",
-                (user_id,),
-            ).fetchone()
-        return dict(row) if row else None
+            return connection.execute(query, params).fetchone() is not None
 
-    def get_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
+
+    def _get_by_field(
+        self,
+        table: str,
+        field: str,
+        value: Any,
+    ):
+        
+        allowed = {
+            "users": {"id", "username"},
+            "books": {"id", "book_code"},
+            "members": {"id", "member_code"},
+        }
+
+        if table not in allowed or field not in allowed[table]:
+            raise ValueError("Invalid query")
+        
         with self._connection() as connection:
             row = connection.execute(
-                "SELECT * FROM users WHERE username = ?",
-                (username.strip(),),
+                f"SELECT * FROM {table} WHERE {field} = ?",
+                (value,),
             ).fetchone()
+
         return dict(row) if row else None
+
+    def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
+        return self._get_by_field("users", "id", user_id)
+
+    def get_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
+        return self._get_by_field("users", "username", username)
 
     def authenticate_user(self, username: str, password: str) -> Optional[Dict[str, Any]]:
         user = self.get_user_by_username(username)
