@@ -61,7 +61,7 @@ class UsersFrame(BaseModuleFrame):
         )
 
         self.build_button(
-            controls, "Reset", self._reset_search, COLORS["secondary"]
+            controls, "Reset", self._reset_search("username"), COLORS["secondary"]
         ).grid(row=0, column=5, padx=6)
 
         controls.columnconfigure(6, weight=1)
@@ -139,11 +139,6 @@ class UsersFrame(BaseModuleFrame):
         self.tree, self.scrollbar = self.build_table(table_wrap, columns, widths)
 
         form.columnconfigure(0, weight=1)
-
-    def _reset_search(self) -> None:
-        self.search_field_var.set("username")
-        self.search_text_var.set("")
-        self.load_data()
 
     def clear_form(self) -> None:
         self.selected_user_id = None
@@ -258,14 +253,6 @@ class UsersFrame(BaseModuleFrame):
         )
 
     def refresh_data(self) -> None:
-        self.load_data()
-
-    def sort_by(self, column: str) -> None:
-        if self.sort_column == column:
-            self.sort_ascending = not self.sort_ascending
-        else:
-            self.sort_column = column
-            self.sort_ascending = True
         self.load_data()
 
     def on_select(self, event) -> None:

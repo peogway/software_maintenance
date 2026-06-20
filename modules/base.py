@@ -41,8 +41,10 @@ class BaseModuleFrame(tk.Frame):
         self.app = app
         self.db = db
         self.selected_id = None
-        self._sort_column = None
-        self._sort_ascending = True
+        self.sort_column = None
+        self.sort_ascending = True
+        self.search_field_var = None
+        self.search_text_var = None
 
     def build_button(self, parent, text, command, color):
         return tk.Button(
@@ -183,7 +185,6 @@ class BaseModuleFrame(tk.Frame):
         columns: Sequence[str],
         widths: dict[str, int] | None = None,
     ) -> None:
-        widths = widths or {}
         tree["columns"] = columns
         tree["show"] = "headings"
         for column in columns:
@@ -192,7 +193,14 @@ class BaseModuleFrame(tk.Frame):
                 column, width=widths.get(column, 130), anchor="center", stretch=True
             )
 
-    def build_table(self, parent, columns, widths=None, on_select=None, sortable=False):
+        for column in columns:
+            tree.heading(
+                column,
+                text=column.replace("_", " ").title(),
+                command=lambda c=column: self.set_sort(c),
+            )
+
+    def build_table(self, parent, columns, widths=None):
         widths = widths or {}
 
         tree = ttk.Treeview(parent, columns=columns, show="headings")
@@ -200,8 +208,8 @@ class BaseModuleFrame(tk.Frame):
         tree.configure(yscrollcommand=scrollbar.set)
         self.configure_treeview(tree, columns, widths or {})
 
-        if on_select:
-            tree.bind("<<TreeviewSelect>>", on_select)
+        if self.on_select:
+            tree.bind("<<TreeviewSelect>>", self.on_select)
 
         tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
@@ -230,9 +238,21 @@ class BaseModuleFrame(tk.Frame):
             elif isinstance(widget, tk.StringVar):
                 widget.set("")
 
+    def load_data(self):
+        pass
+
+    def on_select():
+        pass
+
     def set_sort(self, column: str) -> None:
-        if self._sort_column == column:
-            self._sort_ascending = not self._sort_ascending
+        if self.sort_column == column:
+            self.sort_ascending = not self.sort_ascending
         else:
-            self._sort_column = column
-            self._sort_ascending = True
+            self.sort_column = column
+            self.sort_ascending = True
+        self.load_data()
+
+    def _reset_search(self, field: str) -> None:
+        self.search_field_var.set(field)
+        self.search_text_var.set("")
+        self.load_data()

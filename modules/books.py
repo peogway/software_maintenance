@@ -61,7 +61,7 @@ class BooksFrame(BaseModuleFrame):
         )
 
         self.build_button(
-            search_bar, "Reset", self._reset_search, COLORS["secondary"]
+            search_bar, "Reset", self._reset_search("title"), COLORS["secondary"]
         ).grid(row=0, column=5, padx=6)
 
         search_bar.columnconfigure(6, weight=1)
@@ -142,17 +142,10 @@ class BooksFrame(BaseModuleFrame):
             "added_date": 120,
         }
 
-        self.tree, self.scrollbar = self.build_table(
-            table_wrap, columns, widths, self.on_select
-        )
+        self.tree, self.scrollbar = self.build_table(table_wrap, columns, widths)
 
         form.columnconfigure(0, weight=1)
         form.columnconfigure(1, weight=1)
-
-    def _reset_search(self) -> None:
-        self.search_field_var.set("title")
-        self.search_text_var.set("")
-        self.load_data()
 
     def _set_book_code(self) -> None:
         code = self.db.generate_book_code()
@@ -283,14 +276,6 @@ class BooksFrame(BaseModuleFrame):
 
     def refresh_data(self) -> None:
         self._set_book_code()
-        self.load_data()
-
-    def sort_by(self, column: str) -> None:
-        if self.sort_column == column:
-            self.sort_ascending = not self.sort_ascending
-        else:
-            self.sort_column = column
-            self.sort_ascending = True
         self.load_data()
 
     def on_select(self, event) -> None:
