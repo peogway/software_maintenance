@@ -135,12 +135,9 @@ class IssueBooksFrame(BaseModuleFrame):
             "fine_amount": 90,
         }
 
-        self.tree, scrollbar = self.build_treeview(table_wrap, columns, widths)
-
-        self.tree.bind("<<TreeviewSelect>>", self.on_select)
-
-        self.tree.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        self.tree, self.scrollbar = self.build_table(
+            table_wrap, columns, widths, self.on_select
+        )
 
         issue_panel.columnconfigure((0, 1), weight=1)
         return_panel.columnconfigure(0, weight=1)

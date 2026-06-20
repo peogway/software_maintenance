@@ -89,19 +89,6 @@ class BaseModuleFrame(tk.Frame):
 
         return container
 
-    def build_treeview(self, parent, columns, widths=None):
-        tree = ttk.Treeview(parent, columns=columns, show="headings")
-        widths = widths or {}
-
-        for col in columns:
-            tree.heading(col, text=col.replace("_", " ").title())
-            tree.column(col, width=widths.get(col, 130), anchor="center", stretch=True)
-
-        scroll = ttk.Scrollbar(parent, orient="vertical", command=tree.yview)
-        tree.configure(yscrollcommand=scroll.set)
-
-        return tree, scroll
-
     def build_card(
         self, parent: tk.Widget, title: str, value: str, accent: str
     ) -> tk.Frame:
@@ -204,6 +191,21 @@ class BaseModuleFrame(tk.Frame):
             tree.column(
                 column, width=widths.get(column, 130), anchor="center", stretch=True
             )
+
+    def build_table(self, parent, columns, widths=None, on_select=None, sortable=False):
+        widths = widths or {}
+
+        tree = ttk.Treeview(parent, columns=columns, show="headings")
+        scrollbar = ttk.Scrollbar(parent, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+        self.configure_treeview(tree, columns, widths or {})
+
+        if on_select:
+            tree.bind("<<TreeviewSelect>>", on_select)
+
+        tree.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        return tree, scrollbar
 
     def fill_treeview(
         self, tree: ttk.Treeview, rows: Iterable[Sequence[object]]

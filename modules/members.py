@@ -124,19 +124,9 @@ class MembersFrame(BaseModuleFrame):
             "address": 250,
             "join_date": 120,
         }
-        self.tree, scrollbar = self.build_treeview(table_wrap, columns, widths)
-
-        for column in columns:
-            self.tree.heading(
-                column,
-                text=column.replace("_", " ").title(),
-                command=lambda c=column: self.sort_by(c),
-            )
-
-        self.tree.bind("<<TreeviewSelect>>", self.on_select)
-
-        self.tree.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        self.tree, self.scrollbar = self.build_table(
+            table_wrap, columns, widths, self.on_select
+        )
 
         form.columnconfigure(0, weight=1)
         form.columnconfigure(1, weight=1)

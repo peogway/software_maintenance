@@ -136,19 +136,7 @@ class UsersFrame(BaseModuleFrame):
 
         widths = {"id": 70, "username": 180, "role": 100, "created_at": 160}
 
-        self.tree, scrollbar = self.build_treeview(table_wrap, columns, widths)
-
-        for column in columns:
-            self.tree.heading(
-                column,
-                text=column.replace("_", " ").title(),
-                command=lambda c=column: self.sort_by(c),
-            )
-
-        self.tree.bind("<<TreeviewSelect>>", self.on_select)
-
-        self.tree.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        self.tree, self.scrollbar = self.build_table(table_wrap, columns, widths)
 
         form.columnconfigure(0, weight=1)
 

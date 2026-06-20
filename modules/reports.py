@@ -73,10 +73,7 @@ class ReportsFrame(BaseModuleFrame):
         inner = tk.Frame(table_frame, bg=COLORS["panel"], padx=10, pady=10)
         inner.pack(fill="both", expand=True)
 
-        self.tree, scrollbar = self.build_treeview(inner, self.current_columns)
-
-        self.tree.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        self.tree, self.scrollbar = self.build_table(inner, self.current_columns)
 
     def _report_definitions(self) -> dict:
         return {
