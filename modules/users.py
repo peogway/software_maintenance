@@ -191,14 +191,13 @@ class UsersFrame(BaseModuleFrame):
         if not self._validate_add(data):
             return
 
-        def add_user_flow(data):
-            self.db.create_user(data["username"], data["password"], data["role"])
-            self.clear_form()
-            self.load_data()
-
         success = self.safe_fn(
-            lambda: add_user_flow(data),
+            lambda: self.db.create_user(
+                data["username"], data["password"], data["role"]
+            ),
             success_msg="User added successfully.",
+            clear_form=True,
+            load_data=True,
         )
 
     def update_user(self) -> None:
@@ -209,18 +208,15 @@ class UsersFrame(BaseModuleFrame):
         if not self._validate_update(data):
             return
 
-        def update_user_flow(selected_user_id, data):
-            self.db.update_user(
+        success = self.safe_fn(
+            lambda: self.db.update_user(
                 self.selected_user_id,
                 data["username"],
                 data["role"],
                 data["password"] or None,
-            )
-            self.load_data()
-
-        success = self.safe_fn(
-            lambda: update_user_flow(self.selected_user_id, data),
+            ),
             success_msg="User updated successfully.",
+            load_data=True,
         )
 
     def delete_user(self) -> None:
@@ -239,14 +235,11 @@ class UsersFrame(BaseModuleFrame):
         if not messagebox.askyesno("Confirm Delete", "Delete the selected user?"):
             return
 
-        def delete_user_flow(selected_user_id):
-            self.db.delete_user(self.selected_user_id)
-            self.clear_form()
-            self.load_data()
-
         success = self.safe_fn(
-            lambda: delete_user_flow(self.selected_user_id),
+            lambda: self.db.delete_user(self.selected_user_id),
             success_msg="User deleted successfully.",
+            clear_form=True,
+            load_data=True,
         )
 
     def load_data(self) -> None:

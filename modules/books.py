@@ -206,7 +206,6 @@ class BooksFrame(BaseModuleFrame):
             lambda: int(data["quantity"]),
             error_type="Validation Error",
             fail_msg="Quantity must be a positive whole number.",
-            use_custom_error=True,
         )
 
         if not success:
@@ -215,25 +214,18 @@ class BooksFrame(BaseModuleFrame):
         return True
 
     def add_book(self) -> None:
-        def add_book_flow(data):
-            self.db.add_book(data)
-            self.clear_form()
-            self.load_data()
-
         data = self._collect_data()
         if not self._validate(data):
             return
 
         success = self.safe_fn(
-            lambda: add_book_flow(data),
+            lambda: self.db.add_book(data),
             success_msg="Book added successfully.",
+            load_data=True,
+            clear_form=True,
         )
 
     def update_book(self) -> None:
-        def update_book_flow(selected_book_id, data):
-            self.db.update_book(selected_book_id, data),
-            self.load_data(),
-
         if self.selected_book_id is None:
             messagebox.showwarning("Selection Required", "Select a book to update.")
             return
@@ -242,16 +234,12 @@ class BooksFrame(BaseModuleFrame):
             return
 
         success = self.safe_fn(
-            lambda: update_book_flow(self.selected_book_id, data),
+            lambda: self.db.update_book(self.selected_book_id, data),
             success_msg="Book updated successfully.",
+            load_data=True,
         )
 
     def delete_book(self) -> None:
-        def delete_book_flow(selected_book_id):
-            self.db.delete_book(selected_book_id)
-            self.clear_form()
-            self.clear_data()
-
         if self.selected_book_id is None:
             messagebox.showwarning("Selection Required", "Select a book to delete.")
             return
@@ -259,8 +247,10 @@ class BooksFrame(BaseModuleFrame):
             return
 
         success = self.safe_fn(
-            lambda: delete_book_flow(self.selected_book_id),
+            lambda: self.db.delete_book(self.selected_book_id),
             success_msg="Book deleted successfully.",
+            clear_form=True,
+            load_data=True,
         )
 
     def load_data(self) -> None:

@@ -167,26 +167,18 @@ class MembersFrame(BaseModuleFrame):
         return True
 
     def add_member(self) -> None:
-
-        def add_member_flow(data):
-            self.db.add_member(data)
-            self.clear_form()
-            self.load_data()
-
         data = self._collect_data()
         if not self._validate(data):
             return
 
         success = self.safe_fn(
-            lambda: add_member_flow(data),
+            lambda: self.db.add_member(data),
             success_msg="Member added successfully.",
+            clear_form=True,
+            load_data=True,
         )
 
     def update_member(self) -> None:
-        def update_member_flow(selected_member_id, data):
-            self.db.update_member(selected_member_id, data)
-            self.load_data()
-
         if self.selected_member_id is None:
             messagebox.showwarning("Selection Required", "Select a member to update.")
             return
@@ -195,16 +187,12 @@ class MembersFrame(BaseModuleFrame):
             return
 
         success = self.safe_fn(
-            lambda: update_member_flow(self.selected_member_id, data),
+            lambda: self.db.update_member(self.selected_member_id, data),
             success_msg="Member updated successfully.",
+            load_data=True,
         )
 
     def delete_member(self) -> None:
-        def delete_member_flow(selected_member_id):
-            self.db.update_member(selected_member_id)
-            self.clear_form()
-            self.load_data()
-
         if self.selected_member_id is None:
             messagebox.showwarning("Selection Required", "Select a member to delete.")
             return
@@ -212,8 +200,10 @@ class MembersFrame(BaseModuleFrame):
             return
 
         success = self.safe_fn(
-            lambda: delete_member_flow(self.selected_member_id),
+            lambda: self.db.delete_member(self.selected_member_id),
             success_msg="Member deleted successfully.",
+            clear_form=True,
+            load_data=True,
         )
 
     def load_data(self) -> None:

@@ -133,7 +133,6 @@ class SettingsFrame(BaseModuleFrame):
         self.email_entry.insert(0, settings.get("email", ""))
 
     def save_library_info(self) -> None:
-
         def save_library_info_flow():
             self.db.update_library_settings(
                 {
@@ -201,9 +200,9 @@ class SettingsFrame(BaseModuleFrame):
         def restore_database_flow(file_path):
             self.db.restore_database(file_path)
             self.app.refresh_header()
-            self.refresh_data()
 
         success = self.safe_fn(
             lambda: restore_database_flow(file_path),
             success_msg="Database restored successfully.",
+            refresh_data=True,
         )

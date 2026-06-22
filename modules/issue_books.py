@@ -175,10 +175,6 @@ class IssueBooksFrame(BaseModuleFrame):
         return self.book_options.get(self.book_var.get())
 
     def issue_book(self) -> None:
-        def issue_book_flow(book_id, member_id):
-            self.db.issue_book(book_id, member_id),
-            self.refresh_data()
-
         member_id = self._selected_member_id()
         book_id = self._selected_book_id()
         if member_id is None or book_id is None:
@@ -188,8 +184,9 @@ class IssueBooksFrame(BaseModuleFrame):
             return
 
         success = self.safe_fn(
-            lambda: issue_book_flow(book_id, member_id),
+            lambda: self.db.issue_book(book_id, member_id),
             success_msg="Book issued successfully.",
+            refresh_data=True,
         )
 
     def return_selected_book(self) -> None:
@@ -198,14 +195,17 @@ class IssueBooksFrame(BaseModuleFrame):
                 "Selection Required", "Select an issued record to return."
             )
             return
-        try:
-            fine = self.db.return_book(self.selected_issue_id)
+
+        fine = self.safe_fn(
+            lambda: self.db.return_book(self.selected_issue_id),
+            refresh_data=True,
+            display_success_message=False,
+        )
+
+        if fine:
             messagebox.showinfo(
                 "Success", f"Book returned successfully. Fine: Tk {fine:.2f}"
             )
-            self.refresh_data()
-        except Exception as exc:
-            messagebox.showerror("Error", str(exc))
 
     def load_data(self) -> None:
         issues = self.db.fetch_issued_books()

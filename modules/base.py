@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import tkinter as tk
 from tkinter import ttk
-from typing import Iterable, Sequence, Callable
+from typing import Iterable, Optional, Sequence, Callable, Any
 from tkinter import messagebox
 
 COLORS = {
@@ -262,21 +262,37 @@ class BaseModuleFrame(tk.Frame):
 
     def safe_fn(
         self,
-        fn: Callable[[], None],
+        fn: Callable[[], Any],
         error_type: str = "Error",
-        fail_msg: str = "Operation failed",
+        fail_msg: Optional[str] = "",
         success_type: str = "Successs",
-        success_msg: str = "",
-        use_custom_error: bool = False,
-    ) -> bool:
+        success_msg: Optional[str] = "",
+        load_data: bool = False,
+        clear_form: bool = False,
+        refresh_data=False,
+        display_success_message=True,
+    ) -> bool | Any:
         try:
-            fn()
+            res = fn()
+            if clear_form:
+                self.clear_form()
+            if load_data:
+                self.load_data()
+            if refresh_data:
+                self.refresh_data()
+
+            if not display_success_message:
+                return res
+
             if success_msg:
                 messagebox.showinfo(success_type, success_msg)
             return True
         except Exception as e:
-            if use_custom_error:
-                messagebox.showwarning(error_type, fail_msg)
-            else:
-                messagebox.showerror("Error", str(e))
+            messagebox.showwarning(error_type, fail_msg or str(e))
             return False
+
+    def clear_form(self) -> None:
+        pass
+
+    def refresh_data(self) -> None:
+        pass
