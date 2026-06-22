@@ -61,7 +61,10 @@ class BooksFrame(BaseModuleFrame):
         )
 
         self.build_button(
-            search_bar, "Reset", self._reset_search("title"), COLORS["secondary"]
+            search_bar,
+            "Reset",
+            lambda: self._reset_search("title"),
+            COLORS["secondary"],
         ).grid(row=0, column=5, padx=6)
 
         search_bar.columnconfigure(6, weight=1)

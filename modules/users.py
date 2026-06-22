@@ -61,7 +61,10 @@ class UsersFrame(BaseModuleFrame):
         )
 
         self.build_button(
-            controls, "Reset", self._reset_search("username"), COLORS["secondary"]
+            controls,
+            "Reset",
+            lambda: self._reset_search("username"),
+            COLORS["secondary"],
         ).grid(row=0, column=5, padx=6)
 
         controls.columnconfigure(6, weight=1)

@@ -47,7 +47,9 @@ class BaseModuleFrame(tk.Frame):
         self.search_field_var = None
         self.search_text_var = None
 
-    def build_button(self, parent, text, command, color):
+    def build_button(
+        self, parent, text: str, command: Callable[[], None], color: str
+    ) -> tk.Button:
         return tk.Button(
             parent,
             text=text,
@@ -242,7 +244,7 @@ class BaseModuleFrame(tk.Frame):
     def load_data(self):
         pass
 
-    def on_select():
+    def on_select(self):
         pass
 
     def set_sort(self, column: str) -> None:

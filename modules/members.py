@@ -61,7 +61,7 @@ class MembersFrame(BaseModuleFrame):
         )
 
         self.build_button(
-            search_bar, "Reset", self._reset_search("name"), COLORS["secondary"]
+            search_bar, "Reset", lambda: self._reset_search("name"), COLORS["secondary"]
         ).grid(row=0, column=5, padx=6)
 
         search_bar.columnconfigure(6, weight=1)
