@@ -198,56 +198,67 @@ class BooksFrame(BaseModuleFrame):
                     f"{field.replace('_', ' ').title()} is required.",
                 )
                 return False
-        try:
-            quantity = int(data["quantity"])
-            if quantity <= 0:
-                raise ValueError
-        except ValueError:
-            messagebox.showwarning(
-                "Validation Error", "Quantity must be a positive whole number."
-            )
+
+        success = self.safe_fn(
+            lambda: int(data["quantity"]),
+            error_type="Validation Error",
+            fail_msg="Quantity must be a positive whole number.",
+            use_custom_error=True,
+        )
+
+        if not success:
             return False
+
         return True
 
     def add_book(self) -> None:
+        def add_book_flow(data):
+            self.db.add_book(data)
+            self.clear_form()
+            self.load_data()
+
         data = self._collect_data()
         if not self._validate(data):
             return
-        try:
-            self.db.add_book(data)
-            messagebox.showinfo("Success", "Book added successfully.")
-            self.clear_form()
-            self.load_data()
-        except Exception as exc:
-            messagebox.showerror("Error", str(exc))
+
+        success = self.safe_fn(
+            lambda: add_book_flow(data),
+            success_msg="Book added successfully.",
+        )
 
     def update_book(self) -> None:
+        def update_book_flow(selected_book_id, data):
+            self.db.update_book(selected_book_id, data),
+            self.load_data(),
+
         if self.selected_book_id is None:
             messagebox.showwarning("Selection Required", "Select a book to update.")
             return
         data = self._collect_data()
         if not self._validate(data):
             return
-        try:
-            self.db.update_book(self.selected_book_id, data)
-            messagebox.showinfo("Success", "Book updated successfully.")
-            self.load_data()
-        except Exception as exc:
-            messagebox.showerror("Error", str(exc))
+
+        success = self.safe_fn(
+            lambda: update_book_flow(self.selected_book_id, data),
+            success_msg="Book updated successfully.",
+        )
 
     def delete_book(self) -> None:
+        def delete_book_flow(selected_book_id):
+            self.db.delete_book(selected_book_id)
+            self.clear_form()
+            self.clear_data()
+
         if self.selected_book_id is None:
             messagebox.showwarning("Selection Required", "Select a book to delete.")
             return
         if not messagebox.askyesno("Confirm Delete", "Delete the selected book?"):
             return
-        try:
-            self.db.delete_book(self.selected_book_id)
-            messagebox.showinfo("Success", "Book deleted successfully.")
-            self.clear_form()
-            self.load_data()
-        except Exception as exc:
-            messagebox.showerror("Error", str(exc))
+
+        success = self.safe_fn(
+            lambda: delete_book_flow(self.selected_book_id),
+            success_msg="Book deleted successfully.",
+        )
 
     def load_data(self) -> None:
         search_text = self.search_text_var.get().strip()

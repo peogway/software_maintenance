@@ -175,6 +175,10 @@ class IssueBooksFrame(BaseModuleFrame):
         return self.book_options.get(self.book_var.get())
 
     def issue_book(self) -> None:
+        def issue_book_flow(book_id, member_id):
+            self.db.issue_book(book_id, member_id),
+            self.refresh_data()
+
         member_id = self._selected_member_id()
         book_id = self._selected_book_id()
         if member_id is None or book_id is None:
@@ -182,12 +186,11 @@ class IssueBooksFrame(BaseModuleFrame):
                 "Selection Required", "Select both a member and a book."
             )
             return
-        try:
-            self.db.issue_book(book_id, member_id)
-            messagebox.showinfo("Success", "Book issued successfully.")
-            self.refresh_data()
-        except Exception as exc:
-            messagebox.showerror("Error", str(exc))
+
+        success = self.safe_fn(
+            lambda: issue_book_flow(book_id, member_id),
+            success_msg="Book issued successfully.",
+        )
 
     def return_selected_book(self) -> None:
         if self.selected_issue_id is None:

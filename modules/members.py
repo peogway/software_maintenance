@@ -167,44 +167,54 @@ class MembersFrame(BaseModuleFrame):
         return True
 
     def add_member(self) -> None:
+
+        def add_member_flow(data):
+            self.db.add_member(data)
+            self.clear_form()
+            self.load_data()
+
         data = self._collect_data()
         if not self._validate(data):
             return
-        try:
-            self.db.add_member(data)
-            messagebox.showinfo("Success", "Member added successfully.")
-            self.clear_form()
-            self.load_data()
-        except Exception as exc:
-            messagebox.showerror("Error", str(exc))
+
+        success = self.safe_fn(
+            lambda: add_member_flow(data),
+            success_msg="Member added successfully.",
+        )
 
     def update_member(self) -> None:
+        def update_member_flow(selected_member_id, data):
+            self.db.update_member(selected_member_id, data)
+            self.load_data()
+
         if self.selected_member_id is None:
             messagebox.showwarning("Selection Required", "Select a member to update.")
             return
         data = self._collect_data()
         if not self._validate(data):
             return
-        try:
-            self.db.update_member(self.selected_member_id, data)
-            messagebox.showinfo("Success", "Member updated successfully.")
-            self.load_data()
-        except Exception as exc:
-            messagebox.showerror("Error", str(exc))
+
+        success = self.safe_fn(
+            lambda: update_member_flow(self.selected_member_id, data),
+            success_msg="Member updated successfully.",
+        )
 
     def delete_member(self) -> None:
+        def delete_member_flow(selected_member_id):
+            self.db.update_member(selected_member_id)
+            self.clear_form()
+            self.load_data()
+
         if self.selected_member_id is None:
             messagebox.showwarning("Selection Required", "Select a member to delete.")
             return
         if not messagebox.askyesno("Confirm Delete", "Delete the selected member?"):
             return
-        try:
-            self.db.delete_member(self.selected_member_id)
-            messagebox.showinfo("Success", "Member deleted successfully.")
-            self.clear_form()
-            self.load_data()
-        except Exception as exc:
-            messagebox.showerror("Error", str(exc))
+
+        success = self.safe_fn(
+            lambda: delete_member_flow(self.selected_member_id),
+            success_msg="Member deleted successfully.",
+        )
 
     def load_data(self) -> None:
         search_text = self.search_text_var.get().strip()

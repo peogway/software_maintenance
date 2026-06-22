@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import tkinter as tk
 from tkinter import ttk
-from typing import Iterable, Sequence
+from typing import Iterable, Sequence, Callable
+from tkinter import messagebox
 
 COLORS = {
     "bg": "#0f172a",
@@ -256,3 +257,24 @@ class BaseModuleFrame(tk.Frame):
         self.search_field_var.set(field)
         self.search_text_var.set("")
         self.load_data()
+
+    def safe_fn(
+        self,
+        fn: Callable[[], None],
+        error_type: str = "Error",
+        fail_msg: str = "Operation failed",
+        success_type: str = "Successs",
+        success_msg: str = "",
+        use_custom_error: bool = False,
+    ) -> bool:
+        try:
+            fn()
+            if success_msg:
+                messagebox.showinfo(success_type, success_msg)
+            return True
+        except Exception as e:
+            if use_custom_error:
+                messagebox.showwarning(error_type, fail_msg)
+            else:
+                messagebox.showerror("Error", str(e))
+            return False

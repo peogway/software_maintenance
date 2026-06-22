@@ -241,11 +241,15 @@ class ReportsFrame(BaseModuleFrame):
         )
         if not file_path:
             return
-        try:
+
+        def write_csv(file_path):
             with open(file_path, "w", newline="", encoding="utf-8") as file_handle:
                 writer = csv.writer(file_handle)
                 writer.writerow(self.current_columns)
                 writer.writerows(self.current_rows)
-            messagebox.showinfo("Export Complete", f"Report exported to {file_path}")
-        except Exception as exc:
-            messagebox.showerror("Export Failed", str(exc))
+
+        success = self.safe_fn(
+            lambda: write_csv(file_path),
+            success_type="Export Complete",
+            success_msg=f"Report exported to {file_path}",
+        )

@@ -187,13 +187,16 @@ class UsersFrame(BaseModuleFrame):
         data = self._collect_data()
         if not self._validate_add(data):
             return
-        try:
+
+        def add_user_flow(data):
             self.db.create_user(data["username"], data["password"], data["role"])
-            messagebox.showinfo("Success", "User added successfully.")
             self.clear_form()
             self.load_data()
-        except Exception as exc:
-            messagebox.showerror("Error", str(exc))
+
+        success = self.safe_fn(
+            lambda: add_user_flow(data),
+            success_msg="User added successfully.",
+        )
 
     def update_user(self) -> None:
         if self.selected_user_id is None:
@@ -202,17 +205,20 @@ class UsersFrame(BaseModuleFrame):
         data = self._collect_data()
         if not self._validate_update(data):
             return
-        try:
+
+        def update_user_flow(selected_user_id, data):
             self.db.update_user(
                 self.selected_user_id,
                 data["username"],
                 data["role"],
                 data["password"] or None,
             )
-            messagebox.showinfo("Success", "User updated successfully.")
             self.load_data()
-        except Exception as exc:
-            messagebox.showerror("Error", str(exc))
+
+        success = self.safe_fn(
+            lambda: update_user_flow(self.selected_user_id, data),
+            success_msg="User updated successfully.",
+        )
 
     def delete_user(self) -> None:
         if self.selected_user_id is None:
@@ -229,13 +235,16 @@ class UsersFrame(BaseModuleFrame):
             return
         if not messagebox.askyesno("Confirm Delete", "Delete the selected user?"):
             return
-        try:
+
+        def delete_user_flow(selected_user_id):
             self.db.delete_user(self.selected_user_id)
-            messagebox.showinfo("Success", "User deleted successfully.")
             self.clear_form()
             self.load_data()
-        except Exception as exc:
-            messagebox.showerror("Error", str(exc))
+
+        success = self.safe_fn(
+            lambda: delete_user_flow(self.selected_user_id),
+            success_msg="User deleted successfully.",
+        )
 
     def load_data(self) -> None:
         users = self.db.fetch_users(
