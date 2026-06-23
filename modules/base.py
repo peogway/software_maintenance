@@ -46,6 +46,7 @@ class BaseModuleFrame(tk.Frame):
         self.sort_ascending = True
         self.search_field_var = None
         self.search_text_var = None
+        self.form_fields = {}
 
     def build_button(
         self, parent, text: str, command: Callable[[], None], color: str
@@ -239,13 +240,46 @@ class BaseModuleFrame(tk.Frame):
             elif isinstance(widget, tk.Text):
                 widget.delete("1.0", tk.END)
             elif isinstance(widget, tk.StringVar):
-                widget.set("")
+                value = widget.get().strip()
+                if value == "admin" or value == "staff" or value == "student":
+                    widget.set("staff")
+                else:
+                    widget.set("")
 
     def load_data(self):
         pass
 
-    def on_select(self):
-        pass
+    def on_select(
+        self,
+        fn: Optional[Callable[[], None]] = None,
+        parse_int: bool = False,
+        isse_selection: bool = False,
+        code_entry: bool = False,
+        report: bool = False,
+    ) -> None:
+        self.clear_entries(self.form_fields.values())
+        selection = self.tree.selection()
+        if not selection:
+            return
+        values = self.tree.item(selection[0], "values")
+        value = values[0]
+
+        if parse_int or isse_selection:
+            value = int(value)
+
+        if code_entry:
+            self.code_entry.configure(state="normal")
+
+        if isse_selection:
+            self.selected_id = value
+            status_text = f"Selected Issue ID: {values[0]} | Status: {values[8]}"
+            self.issue_id_label.configure(text=status_text)
+        else:
+            selected = fn(value)
+            if not selected:
+                return
+            self.selected_id = selected["id"]
+            self.fill_form_data(self.form_fields, selected)
 
     def set_sort(self, column: str) -> None:
         if self.sort_column == column:
@@ -267,10 +301,10 @@ class BaseModuleFrame(tk.Frame):
         fail_msg: Optional[str] = "",
         success_type: str = "Successs",
         success_msg: Optional[str] = "",
+        display_success_message=True,
         load_data: bool = False,
         clear_form: bool = False,
         refresh_data=False,
-        display_success_message=True,
     ) -> bool | Any:
         try:
             res = fn()
@@ -291,8 +325,50 @@ class BaseModuleFrame(tk.Frame):
             messagebox.showwarning(error_type, fail_msg or str(e))
             return False
 
-    def clear_form(self) -> None:
-        pass
+    def clear_form(self, user_page: bool = False) -> None:
+        self.selected_id = None
+        self.clear_entries(*self.form_fields.values())
+
+        if not user_page:
+            self._set_code()
+        self.tree.selection_remove(self.tree.selection())
 
     def refresh_data(self) -> None:
+        self._set_code()
+        self.load_data()
+
+    def get_form_data(self, fields):
+        data = {}
+        for key, widget in fields.items():
+            if isinstance(widget, tk.Text):
+                data[key] = widget.get("1.0", tk.END).strip()
+            else:
+                data[key] = widget.get().strip()
+
+        return data
+
+    def fill_form_data(self, fields, data):
+        for key, widget in fields.items():
+            value = data.get(key, "")
+
+            self.clear_entries(widget)
+
+            if isinstance(widget, tk.Text):
+                widget.insert("1.0", value)
+            elif isinstance(widget, tk.StringVar):
+                widget.set(value)
+            else:
+                widget.insert(0, value)
+
+    def _collect_data(self):
+        return self.get_form_data(self.form_fields)
+
+    def _set_code(self) -> None:
+        code = self._get_code()
+        self.code_entry.configure(state="normal")
+        self.code_entry.delete(0, tk.END)
+        self.code_entry.insert(0, code)
+        self.code_entry.configure(state="readonly")
+
+    def _get_code(self) -> str:
         pass

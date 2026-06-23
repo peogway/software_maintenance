@@ -253,3 +253,6 @@ class ReportsFrame(BaseModuleFrame):
             success_type="Export Complete",
             success_msg=f"Report exported to {file_path}",
         )
+
+    def on_select(self, event) -> None:
+        pass

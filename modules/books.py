@@ -11,7 +11,7 @@ class BooksFrame(BaseModuleFrame):
 
     def __init__(self, parent: tk.Widget, app, db) -> None:
         super().__init__(parent, app, db)
-        self.selected_book_id = None
+        self.selected_id = None
         self.search_field_var = tk.StringVar(value="title")
         self.search_text_var = tk.StringVar()
         self.sort_column = "title"
@@ -80,9 +80,7 @@ class BooksFrame(BaseModuleFrame):
         form = tk.Frame(left, bg=COLORS["panel"], padx=10, pady=10)
         form.pack(fill="both", expand=True)
 
-        self.book_code_entry = self.labeled_entry(
-            form, "Book Code", 0, 0, readonly=True
-        )
+        self.code_entry = self.labeled_entry(form, "Book Code", 0, 0, readonly=True)
         self.title_entry = self.labeled_entry(form, "Title", 0, 1)
         self.author_entry = self.labeled_entry(form, "Author", 2, 0)
         self.category_entry = self.labeled_entry(form, "Category", 2, 1)
@@ -150,39 +148,19 @@ class BooksFrame(BaseModuleFrame):
         form.columnconfigure(0, weight=1)
         form.columnconfigure(1, weight=1)
 
-    def _set_book_code(self) -> None:
-        code = self.db.generate_book_code()
-        self.book_code_entry.configure(state="normal")
-        self.book_code_entry.delete(0, tk.END)
-        self.book_code_entry.insert(0, code)
-        self.book_code_entry.configure(state="readonly")
-
-    def clear_form(self) -> None:
-        self.selected_book_id = None
-        self.clear_entries(
-            self.book_code_entry,
-            self.title_entry,
-            self.author_entry,
-            self.category_entry,
-            self.publisher_entry,
-            self.isbn_entry,
-            self.quantity_entry,
-            self.shelf_entry,
-        )
-        self._set_book_code()
-        self.tree.selection_remove(self.tree.selection())
-
-    def _collect_data(self) -> dict:
-        return {
-            "book_code": self.book_code_entry.get().strip(),
-            "title": self.title_entry.get().strip(),
-            "author": self.author_entry.get().strip(),
-            "category": self.category_entry.get().strip(),
-            "publisher": self.publisher_entry.get().strip(),
-            "isbn": self.isbn_entry.get().strip(),
-            "quantity": self.quantity_entry.get().strip(),
-            "shelf_location": self.shelf_entry.get().strip(),
+        self.form_fields = {
+            "book_code": self.code_entry,
+            "title": self.title_entry,
+            "author": self.author_entry,
+            "category": self.category_entry,
+            "publisher": self.publisher_entry,
+            "isbn": self.isbn_entry,
+            "quantity": self.quantity_entry,
+            "shelf_location": self.shelf_entry,
         }
+
+    def _get_code(self) -> None:
+        return self.db.generate_book_code()
 
     def _validate(self, data: dict) -> bool:
         required = [
@@ -226,7 +204,7 @@ class BooksFrame(BaseModuleFrame):
         )
 
     def update_book(self) -> None:
-        if self.selected_book_id is None:
+        if self.selected_id is None:
             messagebox.showwarning("Selection Required", "Select a book to update.")
             return
         data = self._collect_data()
@@ -234,20 +212,20 @@ class BooksFrame(BaseModuleFrame):
             return
 
         success = self.safe_fn(
-            lambda: self.db.update_book(self.selected_book_id, data),
+            lambda: self.db.update_book(self.selected_id, data),
             success_msg="Book updated successfully.",
             load_data=True,
         )
 
     def delete_book(self) -> None:
-        if self.selected_book_id is None:
+        if self.selected_id is None:
             messagebox.showwarning("Selection Required", "Select a book to delete.")
             return
         if not messagebox.askyesno("Confirm Delete", "Delete the selected book?"):
             return
 
         success = self.safe_fn(
-            lambda: self.db.delete_book(self.selected_book_id),
+            lambda: self.db.delete_book(self.selected_id),
             success_msg="Book deleted successfully.",
             clear_form=True,
             load_data=True,
@@ -278,36 +256,5 @@ class BooksFrame(BaseModuleFrame):
             ],
         )
 
-    def refresh_data(self) -> None:
-        self._set_book_code()
-        self.load_data()
-
     def on_select(self, event) -> None:
-        selection = self.tree.selection()
-        if not selection:
-            return
-        values = self.tree.item(selection[0], "values")
-        selected = self.db.get_book_by_code(values[0])
-        if not selected:
-            return
-        self.selected_book_id = selected["id"]
-        self.book_code_entry.configure(state="normal")
-        self.clear_entries(
-            self.book_code_entry,
-            self.title_entry,
-            self.author_entry,
-            self.category_entry,
-            self.publisher_entry,
-            self.isbn_entry,
-            self.quantity_entry,
-            self.shelf_entry,
-        )
-        self.book_code_entry.insert(0, selected["book_code"])
-        self.book_code_entry.configure(state="readonly")
-        self.title_entry.insert(0, selected["title"])
-        self.author_entry.insert(0, selected["author"])
-        self.category_entry.insert(0, selected["category"])
-        self.publisher_entry.insert(0, selected["publisher"])
-        self.isbn_entry.insert(0, selected["isbn"])
-        self.quantity_entry.insert(0, str(selected["quantity"]))
-        self.shelf_entry.insert(0, selected["shelf_location"])
+        super().on_select(self.db.get_book_by_code, code_entry=True)

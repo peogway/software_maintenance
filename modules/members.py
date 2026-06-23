@@ -11,7 +11,7 @@ class MembersFrame(BaseModuleFrame):
 
     def __init__(self, parent: tk.Widget, app, db) -> None:
         super().__init__(parent, app, db)
-        self.selected_member_id = None
+        self.selected_id = None
         self.search_field_var = tk.StringVar(value="name")
         self.search_text_var = tk.StringVar()
         self.sort_column = "name"
@@ -77,9 +77,7 @@ class MembersFrame(BaseModuleFrame):
         form = tk.Frame(left, bg=COLORS["panel"], padx=10, pady=10)
         form.pack(fill="both", expand=True)
 
-        self.member_code_entry = self.labeled_entry(
-            form, "Member Code", 0, 0, readonly=True
-        )
+        self.code_entry = self.labeled_entry(form, "Member Code", 0, 0, readonly=True)
         self.name_entry = self.labeled_entry(form, "Name", 0, 1)
         self.email_entry = self.labeled_entry(form, "Email", 2, 0)
         self.phone_entry = self.labeled_entry(form, "Phone", 2, 1)
@@ -129,33 +127,16 @@ class MembersFrame(BaseModuleFrame):
         form.columnconfigure(0, weight=1)
         form.columnconfigure(1, weight=1)
 
-    def _set_member_code(self) -> None:
-        code = self.db.generate_member_code()
-        self.member_code_entry.configure(state="normal")
-        self.member_code_entry.delete(0, tk.END)
-        self.member_code_entry.insert(0, code)
-        self.member_code_entry.configure(state="readonly")
-
-    def clear_form(self) -> None:
-        self.selected_member_id = None
-        self.clear_entries(
-            self.member_code_entry,
-            self.name_entry,
-            self.email_entry,
-            self.phone_entry,
-            self.address_text,
-        )
-        self._set_member_code()
-        self.tree.selection_remove(self.tree.selection())
-
-    def _collect_data(self) -> dict:
-        return {
-            "member_code": self.member_code_entry.get().strip(),
-            "name": self.name_entry.get().strip(),
-            "email": self.email_entry.get().strip(),
-            "phone": self.phone_entry.get().strip(),
-            "address": self.address_text.get("1.0", tk.END).strip(),
+        self.form_fields = {
+            "member_code": self.code_entry,
+            "name": self.name_entry,
+            "email": self.email_entry,
+            "phone": self.phone_entry,
+            "address": self.address_text,
         }
+
+    def _get_code(self) -> str:
+        return self.db.generate_member_code()
 
     def _validate(self, data: dict) -> bool:
         if not data["name"]:
@@ -179,7 +160,7 @@ class MembersFrame(BaseModuleFrame):
         )
 
     def update_member(self) -> None:
-        if self.selected_member_id is None:
+        if self.selected_id is None:
             messagebox.showwarning("Selection Required", "Select a member to update.")
             return
         data = self._collect_data()
@@ -187,20 +168,20 @@ class MembersFrame(BaseModuleFrame):
             return
 
         success = self.safe_fn(
-            lambda: self.db.update_member(self.selected_member_id, data),
+            lambda: self.db.update_member(self.selected_id, data),
             success_msg="Member updated successfully.",
             load_data=True,
         )
 
     def delete_member(self) -> None:
-        if self.selected_member_id is None:
+        if self.selected_id is None:
             messagebox.showwarning("Selection Required", "Select a member to delete.")
             return
         if not messagebox.askyesno("Confirm Delete", "Delete the selected member?"):
             return
 
         success = self.safe_fn(
-            lambda: self.db.delete_member(self.selected_member_id),
+            lambda: self.db.delete_member(self.selected_id),
             success_msg="Member deleted successfully.",
             clear_form=True,
             load_data=True,
@@ -227,30 +208,5 @@ class MembersFrame(BaseModuleFrame):
             ],
         )
 
-    def refresh_data(self) -> None:
-        self._set_member_code()
-        self.load_data()
-
     def on_select(self, event) -> None:
-        selection = self.tree.selection()
-        if not selection:
-            return
-        values = self.tree.item(selection[0], "values")
-        selected = self.db.get_member_by_code(values[0])
-        if not selected:
-            return
-        self.selected_member_id = selected["id"]
-        self.member_code_entry.configure(state="normal")
-        self.clear_entries(
-            self.member_code_entry,
-            self.name_entry,
-            self.email_entry,
-            self.phone_entry,
-            self.address_text,
-        )
-        self.member_code_entry.insert(0, selected["member_code"])
-        self.member_code_entry.configure(state="readonly")
-        self.name_entry.insert(0, selected["name"])
-        self.email_entry.insert(0, selected["email"] or "")
-        self.phone_entry.insert(0, selected["phone"] or "")
-        self.address_text.insert("1.0", selected["address"])
+        super().on_select(self.db.get_member_by_code, code_entry=True)

@@ -11,7 +11,7 @@ class UsersFrame(BaseModuleFrame):
 
     def __init__(self, parent: tk.Widget, app, db) -> None:
         super().__init__(parent, app, db)
-        self.selected_user_id = None
+        self.selected_id = None
         self.search_field_var = tk.StringVar(value="username")
         self.search_text_var = tk.StringVar()
         self.sort_column = "created_at"
@@ -143,22 +143,11 @@ class UsersFrame(BaseModuleFrame):
 
         form.columnconfigure(0, weight=1)
 
-    def clear_form(self) -> None:
-        self.selected_user_id = None
-        self.clear_entries(
-            self.username_entry,
-            self.password_entry,
-            self.confirm_password_entry,
-        )
-        self.role_var.set("staff")
-        self.tree.selection_remove(self.tree.selection())
-
-    def _collect_data(self) -> dict:
-        return {
-            "username": self.username_entry.get().strip(),
-            "password": self.password_entry.get().strip(),
-            "confirm_password": self.confirm_password_entry.get().strip(),
-            "role": self.role_var.get().strip(),
+        self.form_fields = {
+            "username": self.username_entry,
+            "password": self.password_entry,
+            "confirm_password": self.confirm_password_entry,
+            "role": self.role_var,
         }
 
     def _validate_add(self, data: dict) -> bool:
@@ -201,7 +190,7 @@ class UsersFrame(BaseModuleFrame):
         )
 
     def update_user(self) -> None:
-        if self.selected_user_id is None:
+        if self.selected_id is None:
             messagebox.showwarning("Selection Required", "Select a user to update.")
             return
         data = self._collect_data()
@@ -210,7 +199,7 @@ class UsersFrame(BaseModuleFrame):
 
         success = self.safe_fn(
             lambda: self.db.update_user(
-                self.selected_user_id,
+                self.selected_id,
                 data["username"],
                 data["role"],
                 data["password"] or None,
@@ -220,13 +209,10 @@ class UsersFrame(BaseModuleFrame):
         )
 
     def delete_user(self) -> None:
-        if self.selected_user_id is None:
+        if self.selected_id is None:
             messagebox.showwarning("Selection Required", "Select a user to delete.")
             return
-        if (
-            self.app.current_user
-            and self.app.current_user["id"] == self.selected_user_id
-        ):
+        if self.app.current_user and self.app.current_user["id"] == self.selected_id:
             messagebox.showwarning(
                 "Action Not Allowed",
                 "You cannot delete the account you are currently logged into.",
@@ -236,7 +222,7 @@ class UsersFrame(BaseModuleFrame):
             return
 
         success = self.safe_fn(
-            lambda: self.db.delete_user(self.selected_user_id),
+            lambda: self.db.delete_user(self.selected_id),
             success_msg="User deleted successfully.",
             clear_form=True,
             load_data=True,
@@ -261,16 +247,4 @@ class UsersFrame(BaseModuleFrame):
         self.load_data()
 
     def on_select(self, event) -> None:
-        selection = self.tree.selection()
-        if not selection:
-            return
-        values = self.tree.item(selection[0], "values")
-        user = self.db.get_user_by_id(int(values[0]))
-        if not user:
-            return
-        self.selected_user_id = user["id"]
-        self.clear_entries(
-            self.username_entry, self.password_entry, self.confirm_password_entry
-        )
-        self.username_entry.insert(0, user["username"])
-        self.role_var.set(user["role"])
+        super().on_select(self.db.get_user_by_id, parse_int=True)
