@@ -14,6 +14,7 @@ from modules.reports import ReportsFrame
 from modules.settings import SettingsFrame
 from modules.users import UsersFrame
 from modules.database import LibraryDatabase
+from modules.reserve_books import ReserveBookFrame
 
 
 class LibraryApp(tk.Tk):
@@ -46,15 +47,27 @@ class LibraryApp(tk.Tk):
         style.configure("TFrame", background=COLORS["bg"])
         style.configure("Panel.TFrame", background=COLORS["panel"])
         style.configure("Card.TFrame", background=COLORS["card"])
-        style.configure("TLabel", background=COLORS["bg"], foreground=COLORS["text"], font=FONTS["body"])
+        style.configure(
+            "TLabel",
+            background=COLORS["bg"],
+            foreground=COLORS["text"],
+            font=FONTS["body"],
+        )
         style.configure("TButton", font=FONTS["button"], padding=(12, 8))
-        style.configure("Primary.TButton", background=COLORS["primary"], foreground="white")
+        style.configure(
+            "Primary.TButton", background=COLORS["primary"], foreground="white"
+        )
         style.map(
             "Primary.TButton",
-            background=[("active", COLORS["primary_dark"]), ("disabled", COLORS["secondary"])],
+            background=[
+                ("active", COLORS["primary_dark"]),
+                ("disabled", COLORS["secondary"]),
+            ],
             foreground=[("disabled", "#cbd5e1")],
         )
-        style.configure("Secondary.TButton", background=COLORS["secondary"], foreground="white")
+        style.configure(
+            "Secondary.TButton", background=COLORS["secondary"], foreground="white"
+        )
         style.map("Secondary.TButton", background=[("active", "#475569")])
         style.configure(
             "Treeview",
@@ -73,7 +86,7 @@ class LibraryApp(tk.Tk):
             font=("Segoe UI", 10, "bold"),
             relief="flat",
         )
-        style.map("Treeview", background=[("selected", COLORS["accent"])] )
+        style.map("Treeview", background=[("selected", COLORS["accent"])])
         style.configure("TCombobox", padding=4, foreground="#0f172a")
         style.configure("TEntry", padding=4)
 
@@ -124,6 +137,7 @@ class ShellFrame(tk.Frame):
             "books": BooksFrame,
             "members": MembersFrame,
             "issues": IssueBooksFrame,
+            "reserves": ReserveBookFrame,
             "reports": ReportsFrame,
             "settings": SettingsFrame,
             "users": UsersFrame,
@@ -173,6 +187,7 @@ class ShellFrame(tk.Frame):
             ("Books", "books"),
             ("Members", "members"),
             ("Issue Books", "issues"),
+            ("Reserve Books", "reserves"),
             ("Reports", "reports"),
             ("Settings", "settings"),
         ]
@@ -246,7 +261,9 @@ class ShellFrame(tk.Frame):
 
     def show_module(self, module_key: str) -> None:
         if module_key == "users" and self.app.current_user.get("role") != "admin":
-            messagebox.showwarning("Access Denied", "Only admin users can manage application accounts.")
+            messagebox.showwarning(
+                "Access Denied", "Only admin users can manage application accounts."
+            )
             return
         if self.current_module is not None:
             self.current_module.destroy()

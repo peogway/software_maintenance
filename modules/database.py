@@ -206,7 +206,7 @@ class LibraryDatabase:
             """,
             (username_clean, password_hash, role.strip() or "staff"),
         )
-    
+
     def _exists_any(
         self,
         table: str,
@@ -222,13 +222,13 @@ class LibraryDatabase:
                 clauses.append(f"{k} = ?")
                 params.append(str(v).strip())
 
-        if not clauses: 
+        if not clauses:
             raise ValueError("No conditions provided.")
-        
+
         ALLOWED_TABLES = {"members", "students", "books"}
         if table not in ALLOWED_TABLES:
-            raise ValueError('Invalid query')
-        
+            raise ValueError("Invalid query")
+
         query = f"SELECT 1 FROM {table} WHERE (" + " OR ".join(clauses) + ")"
 
         if exclude_id is not None:
@@ -238,14 +238,13 @@ class LibraryDatabase:
         with self._connection() as connection:
             return connection.execute(query, params).fetchone() is not None
 
-
     def _get_by_field(
         self,
         table: str,
         field: str,
         value: Any,
     ):
-        
+
         allowed = {
             "users": {"id", "username"},
             "books": {"id", "book_code"},
@@ -254,7 +253,7 @@ class LibraryDatabase:
 
         if table not in allowed or field not in allowed[table]:
             raise ValueError("Invalid query")
-        
+
         with self._connection() as connection:
             row = connection.execute(
                 f"SELECT * FROM {table} WHERE {field} = ?",
@@ -269,7 +268,9 @@ class LibraryDatabase:
     def get_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
         return self._get_by_field("users", "username", username)
 
-    def authenticate_user(self, username: str, password: str) -> Optional[Dict[str, Any]]:
+    def authenticate_user(
+        self, username: str, password: str
+    ) -> Optional[Dict[str, Any]]:
         user = self.get_user_by_username(username)
         if not user:
             return None
@@ -277,7 +278,9 @@ class LibraryDatabase:
             return None
         return user
 
-    def change_password(self, username: str, old_password: str, new_password: str) -> bool:
+    def change_password(
+        self, username: str, old_password: str, new_password: str
+    ) -> bool:
         user = self.authenticate_user(username, old_password)
         if not user:
             return False
@@ -289,7 +292,6 @@ class LibraryDatabase:
             )
         return True
 
-
     def _fetch_records(
         self,
         table: str,
@@ -300,7 +302,11 @@ class LibraryDatabase:
         allowed_fields: set[str],
         allowed_order: set[str],
     ) -> List[Dict[str, Any]]:
-        field = search_field if search_field in allowed_fields else sorted(allowed_fields)[0]
+        field = (
+            search_field
+            if search_field in allowed_fields
+            else sorted(allowed_fields)[0]
+        )
         order = order_by if order_by in allowed_order else sorted(allowed_order)[0]
         direction = "ASC" if ascending else "DESC"
 
@@ -335,7 +341,9 @@ class LibraryDatabase:
             allowed_order={"id", "username", "role", "created_at"},
         )
 
-    def update_user(self, user_id: int, username: str, role: str, password: Optional[str] = None) -> None:
+    def update_user(
+        self, user_id: int, username: str, role: str, password: Optional[str] = None
+    ) -> None:
         with self._connection() as connection:
             existing = connection.execute(
                 "SELECT id FROM users WHERE username = ? AND id != ?",
@@ -395,14 +403,10 @@ class LibraryDatabase:
 
     def generate_student_code(self) -> str:
         return self._generate_code("students", "student_code", "ST")
-    
 
     def add_book(self, data: Dict[str, Any]) -> int:
         isbn = data["isbn"].strip()
-        if self._exists_any(
-            "books",
-            { "isbn": isbn }
-        ):
+        if self._exists_any("books", {"isbn": isbn}):
             raise ValueError("A book with this ISBN already exists.")
 
         book_code = data.get("book_code") or self.generate_book_code()
@@ -434,9 +438,7 @@ class LibraryDatabase:
 
     def update_book(self, book_id: int, data: Dict[str, Any]) -> None:
         if self._exists_any(
-            "books",
-            { "isbn": data["isbn"].strip() }, 
-            exclude_id=book_id
+            "books", {"isbn": data["isbn"].strip()}, exclude_id=book_id
         ):
             raise ValueError("A book with this ISBN already exists.")
 
@@ -490,7 +492,6 @@ class LibraryDatabase:
                 raise ValueError("Cannot delete a book that is currently issued.")
             connection.execute("DELETE FROM books WHERE id = ?", (book_id,))
 
-
     def fetch_books(
         self,
         search_text: str = "",
@@ -525,7 +526,6 @@ class LibraryDatabase:
     def get_book_by_code(self, book_code: str) -> Optional[Dict[str, Any]]:
         return self._get_by_field("books", "book_code", book_code)
 
-
     def save_member(
         self,
         data: Dict[str, Any],
@@ -536,14 +536,10 @@ class LibraryDatabase:
         phone = data.get("phone", "").strip() or None
 
         if self._exists_any(
-                "members",
-                {
-                    "member_code": member_code,
-                    "email": email,
-                    "phone": phone
-                },
-                exclude_id=member_id,
-            ):
+            "members",
+            {"member_code": member_code, "email": email, "phone": phone},
+            exclude_id=member_id,
+        ):
             raise ValueError(
                 "A member with the same code, email, or phone already exists."
             )
@@ -619,7 +615,14 @@ class LibraryDatabase:
             order_by=order_by,
             ascending=ascending,
             allowed_fields={"name", "member_code", "phone"},
-            allowed_order={"member_code", "name", "email", "phone", "address", "join_date"},
+            allowed_order={
+                "member_code",
+                "name",
+                "email",
+                "phone",
+                "address",
+                "join_date",
+            },
         )
 
     def get_member_by_id(self, member_id: int) -> Optional[Dict[str, Any]]:
@@ -627,8 +630,6 @@ class LibraryDatabase:
 
     def get_member_by_code(self, member_code: str) -> Optional[Dict[str, Any]]:
         return self._get_by_field("members", "member_code", member_code)
-
-
 
     def save_student(
         self,
@@ -739,7 +740,7 @@ class LibraryDatabase:
                         "roll_no": data["roll_no"],
                         "email": email,
                         "phone": phone,
-                    }
+                    },
                 ):
                     raise ValueError("Duplicate student found.")
 
@@ -766,14 +767,11 @@ class LibraryDatabase:
 
                 return cursor.lastrowid
 
-
     def add_student(self, data, account=None):
         return self.save_student(data, None, account)
 
-
     def update_student(self, student_id, data, account=None):
         return self.save_student(data, student_id, account)
-
 
     def delete_student(self, student_id: int) -> None:
         with self._connection() as connection:
@@ -782,7 +780,9 @@ class LibraryDatabase:
                 (student_id,),
             ).fetchone()
             if student and student["user_id"]:
-                connection.execute("DELETE FROM users WHERE id = ?", (student["user_id"],))
+                connection.execute(
+                    "DELETE FROM users WHERE id = ?", (student["user_id"],)
+                )
             connection.execute("DELETE FROM students WHERE id = ?", (student_id,))
 
     def fetch_students(
@@ -793,7 +793,17 @@ class LibraryDatabase:
         ascending: bool = True,
     ) -> List[Dict[str, Any]]:
         allowed_fields = {"full_name", "student_code", "roll_no", "class_name"}
-        allowed_order = {"student_code", "full_name", "class_name", "section", "roll_no", "email", "phone", "address", "join_date"}
+        allowed_order = {
+            "student_code",
+            "full_name",
+            "class_name",
+            "section",
+            "roll_no",
+            "email",
+            "phone",
+            "address",
+            "join_date",
+        }
         field = search_field if search_field in allowed_fields else "full_name"
         order = order_by if order_by in allowed_order else "full_name"
         direction = "ASC" if ascending else "DESC"
@@ -840,7 +850,9 @@ class LibraryDatabase:
             ).fetchone()
         return dict(row) if row else None
 
-    def issue_book(self, book_id: int, member_id: int, issue_date: Optional[str] = None) -> int:
+    def issue_book(
+        self, book_id: int, member_id: int, issue_date: Optional[str] = None
+    ) -> int:
         issue_day = date.fromisoformat(issue_date) if issue_date else date.today()
         due_day = issue_day + timedelta(days=14)
 
@@ -970,9 +982,15 @@ class LibraryDatabase:
     def dashboard_stats(self) -> Dict[str, Any]:
         today = date.today().isoformat()
         with self._connection() as connection:
-            total_books = connection.execute("SELECT COALESCE(SUM(quantity), 0) AS total FROM books").fetchone()["total"]
-            total_members = connection.execute("SELECT COUNT(*) AS total FROM members").fetchone()["total"]
-            total_students = connection.execute("SELECT COUNT(*) AS total FROM students").fetchone()["total"]
+            total_books = connection.execute(
+                "SELECT COALESCE(SUM(quantity), 0) AS total FROM books"
+            ).fetchone()["total"]
+            total_members = connection.execute(
+                "SELECT COUNT(*) AS total FROM members"
+            ).fetchone()["total"]
+            total_students = connection.execute(
+                "SELECT COUNT(*) AS total FROM students"
+            ).fetchone()["total"]
             books_issued = connection.execute(
                 "SELECT COUNT(*) AS total FROM issued_books WHERE status = 'Issued'"
             ).fetchone()["total"]
@@ -1001,7 +1019,18 @@ class LibraryDatabase:
         }
 
     def report_available_books(self) -> List[Dict[str, Any]]:
-        return [book for book in self.fetch_books(order_by="title") if int(book["available_quantity"]) > 0]
+        return [
+            book
+            for book in self.fetch_books(order_by="title")
+            if int(book["available_quantity"]) > 0
+        ]
+
+    def report_available_books(self) -> List[Dict[str, Any]]:
+        return [
+            book
+            for book in self.fetch_books(order_by="title")
+            if int(book["available_quantity"]) == 0
+        ]
 
     def report_issued_books(self) -> List[Dict[str, Any]]:
         return self.fetch_issued_books(status="Issued")
@@ -1039,8 +1068,7 @@ class LibraryDatabase:
 
     def report_fines(self) -> List[Dict[str, Any]]:
         with self._connection() as connection:
-            rows = connection.execute(
-                """
+            rows = connection.execute("""
                 SELECT
                     issued_books.id,
                     books.book_code,
@@ -1057,13 +1085,14 @@ class LibraryDatabase:
                 JOIN members ON members.id = issued_books.member_id
                 WHERE issued_books.fine_amount > 0
                 ORDER BY issued_books.id DESC
-                """
-            ).fetchall()
+                """).fetchall()
         return [dict(row) for row in rows]
 
     def get_library_settings(self) -> Dict[str, str]:
         with self._connection() as connection:
-            rows = connection.execute("SELECT setting_key, setting_value FROM settings").fetchall()
+            rows = connection.execute(
+                "SELECT setting_key, setting_value FROM settings"
+            ).fetchall()
         return {row["setting_key"]: row["setting_value"] for row in rows}
 
     def update_library_settings(self, settings: Dict[str, str]) -> None:
