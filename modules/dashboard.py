@@ -59,7 +59,9 @@ class DashboardFrame(BaseModuleFrame):
         self.charts_wrap = tk.Frame(self, bg=COLORS["bg"])
         self.charts_wrap.pack(fill="both", expand=True, padx=24, pady=(0, 18))
 
-        self.fig, (self.ax1, self.ax2) = plt.subplots(1, 2, figsize=(10, 4), facecolor=COLORS["bg"])
+        self.fig, (self.ax1, self.ax2) = plt.subplots(
+            1, 2, figsize=(10, 4), facecolor=COLORS["bg"]
+        )
         self.fig.tight_layout(pad=4.0)
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.charts_wrap)
@@ -82,7 +84,10 @@ class DashboardFrame(BaseModuleFrame):
         self.stat_labels["total_books"].configure(text=str(stats["total_books"]))
         self.stat_labels["total_members"].configure(text=str(stats["total_members"]))
         self.stat_labels["books_issued"].configure(text=str(stats["books_issued"]))
-        self.stat_labels["books_available"].configure(text=str(stats["books_available"]))
+        self.stat_labels["books_available"].configure(
+            text=str(stats["books_available"])
+        )
+        self.stat_labels["books_reserved"].configure(text=str(stats["books_reserved"]))
         self.stat_labels["overdue_books"].configure(text=str(stats["overdue_books"]))
         self.stat_labels["total_fines"].configure(text=f"Tk {stats['total_fines']:.2f}")
 
@@ -96,12 +101,20 @@ class DashboardFrame(BaseModuleFrame):
 
         trends = self.db.analytics_issue_trends(days=30)
         if trends:
-            dates = [datetime.strptime(row["issue_date"], "%Y-%m-%d").date() for row in trends]
+            dates = [
+                datetime.strptime(row["issue_date"], "%Y-%m-%d").date()
+                for row in trends
+            ]
             counts = [row["count"] for row in trends]
-            self.ax1.plot(dates, counts, color=COLORS["primary"], marker="o", linewidth=2)
+            self.ax1.plot(
+                dates, counts, color=COLORS["primary"], marker="o", linewidth=2
+            )
             self.ax1.fill_between(dates, counts, color=COLORS["primary"], alpha=0.1)
-        
-        self.ax1.set_title("Book Issues (Last 30 Days)", fontdict={"fontsize": 12, "fontweight": "bold"})
+
+        self.ax1.set_title(
+            "Book Issues (Last 30 Days)",
+            fontdict={"fontsize": 12, "fontweight": "bold"},
+        )
         self.ax1.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
         self.ax1.tick_params(axis="x", rotation=45)
         self.ax1.set_ylabel("Issues Count")
@@ -111,8 +124,10 @@ class DashboardFrame(BaseModuleFrame):
             cats = [row["category"] for row in categories]
             cat_counts = [row["count"] for row in categories]
             self.ax2.bar(cats, cat_counts, color=COLORS["accent"], width=0.6)
-        
-        self.ax2.set_title("Top 5 Categories", fontdict={"fontsize": 12, "fontweight": "bold"})
+
+        self.ax2.set_title(
+            "Top 5 Categories", fontdict={"fontsize": 12, "fontweight": "bold"}
+        )
         self.ax2.set_ylabel("Total Issues")
         self.ax2.tick_params(axis="x", rotation=45)
 
