@@ -10,7 +10,8 @@ A fully offline desktop Library Management System built with Python 3, Tkinter, 
 - Member management with add, update, delete, search, and sorting
 - Student management with add, update, delete, search, and sorting
 - Issue and return workflow with automatic due dates and fines
-- Reports for available books, issued books, overdue books, members, students, and fines
+- Reserve books, cancel reservation, change reservation queue
+- Reports for available books, issued books, overdue books, reservations, members, students, and fines
 - CSV export for reports
 - Admin-only user management for staff accounts and roles
 - Library settings and password change support
@@ -55,6 +56,19 @@ The project uses:
 - SQLite3
 - Pillow
 
+## Dev Requirements (Testing)
+For running tests:
+```bash
+pip install pytest pytest-cov
+```
+Run tests:
+```bash
+pytest tests/ --cov=modules.database --cov-report=term-missing
+```
+
+Current test coverage (core logic):
+- `modules/database.py` ~74%
+
 ## Database Information
 
 The database is created automatically at startup in:
@@ -69,6 +83,7 @@ Tables created automatically:
 - `students`
 - `issued_books`
 - `settings`
+- `reservations`
 
 Default admin account:
 
@@ -97,10 +112,17 @@ library_management_system/
 │   ├── students.py
 │   ├── issue_books.py
 │   ├── reports.py
-│   ├── users.py
-│   └── settings.py
-├── requirements.txt
+│   ├── reserve_books.py
+│   ├── settings.py
+│   └── users.py
+├── tests/
+│   ├── conftest.py
+│   ├── test_integration.py
+│   ├── test_regression.py
+│   └── test_unit_database.py
 ├── main.py
+├── pytest.ini.txt
+├── requirements.txt
 └── README.md
 ```
 
