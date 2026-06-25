@@ -126,6 +126,7 @@ class BooksFrame(BaseModuleFrame):
             "isbn",
             "quantity",
             "available_quantity",
+            "reserved_quantity",
             "shelf_location",
             "added_date",
         ]
@@ -139,6 +140,7 @@ class BooksFrame(BaseModuleFrame):
             "isbn": 130,
             "quantity": 80,
             "available_quantity": 110,
+            "reserved_quantity": 110,
             "shelf_location": 110,
             "added_date": 120,
         }
@@ -249,6 +251,7 @@ class BooksFrame(BaseModuleFrame):
                     book["isbn"],
                     book["quantity"],
                     book["available_quantity"],
+                    book["reserved_quantity"],
                     book["shelf_location"],
                     book["added_date"],
                 )

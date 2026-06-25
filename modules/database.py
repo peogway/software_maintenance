@@ -61,6 +61,7 @@ class LibraryDatabase:
             isbn TEXT NOT NULL UNIQUE,
             quantity INTEGER NOT NULL DEFAULT 1,
             available_quantity INTEGER NOT NULL DEFAULT 1,
+            reserved_quantity INTEGER NOT NULL DEFAULT 0,
             shelf_location TEXT NOT NULL,
             added_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
@@ -105,6 +106,20 @@ class LibraryDatabase:
         CREATE TABLE IF NOT EXISTS settings (
             setting_key TEXT PRIMARY KEY,
             setting_value TEXT NOT NULL
+        );
+
+         CREATE TABLE IF NOT EXISTS reservations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            book_id INTEGER NOT NULL,
+            member_id INTEGER NOT NULL,
+            reserved_date TEXT NOT NULL,
+            ready_date TEXT DEFAULT NULL,
+            expiry_date TEXT DEFAULT NULL,
+            fulfill_date TEXT DEFAULT NULL,
+            queue_pos INTEGER DEFAULT 1,
+            status TEXT NOT NULL DEFAULT 'Active',
+            FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+            FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
         );
         """
         with self._connection() as connection:
@@ -515,6 +530,7 @@ class LibraryDatabase:
                 "isbn",
                 "quantity",
                 "available_quantity",
+                "reserved_quantity",
                 "shelf_location",
                 "added_date",
             },
@@ -858,13 +874,11 @@ class LibraryDatabase:
 
         with self._connection() as connection:
             book = connection.execute(
-                "SELECT available_quantity FROM books WHERE id = ?",
+                "SELECT id, available_quantity, reserved_quantity FROM books WHERE id = ?",
                 (book_id,),
             ).fetchone()
             if not book:
                 raise ValueError("Book not found.")
-            if int(book["available_quantity"]) <= 0:
-                raise ValueError("No available copies left for this book.")
 
             member = connection.execute(
                 "SELECT id FROM members WHERE id = ?",
@@ -883,6 +897,32 @@ class LibraryDatabase:
             ).fetchone()
             if existing_issue:
                 raise ValueError("This book is already issued to the selected member.")
+
+            existing_ready_member = connection.execute(
+                """
+                SELECT * from reservations
+                WHERE book_id = ? and member_id=? and (status='Ready' or status='Active')
+                """,
+                (book["id"], member["id"]),
+            ).fetchone()
+
+            if (
+                not existing_ready_member
+                and int(book["available_quantity"]) - int(book["reserved_quantity"])
+                <= 0
+            ):
+                raise ValueError("All available books have been reserved")
+
+            if existing_ready_member:
+                fulfilled_date = date.today()
+                connection.execute(
+                    "UPDATE reservations SET status='Fulfilled', fulfill_date=? WHERE id=?",
+                    (fulfilled_date.isoformat(), existing_ready_member["id"]),
+                )
+                connection.execute(
+                    "UPDATE books SET reserved_quantity=reserved_quantity-1 WHERE id=?",
+                    (book["id"],),
+                )
 
             cursor = connection.execute(
                 """
@@ -947,23 +987,45 @@ class LibraryDatabase:
                 """,
                 (issue["book_id"],),
             )
+
+            self.next_reserve(issue["book_id"], connection)
         return fine
 
-    def fetch_issued_books(self, status: Optional[str] = None) -> List[Dict[str, Any]]:
+    def fetch_issued_books(
+        self,
+        order_by: str = "id",
+        ascending: bool = True,
+        status: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        allowed_order = {
+            "id",
+            "book_code",
+            "title",
+            "member_code",
+            "member_name",
+            "issue_date",
+            "due_date",
+            "return_date",
+            "status",
+            "fine_amount",
+        }
+        order = order_by if order_by in allowed_order else "id"
+        direction = "ASC" if ascending else "DESC"
+
         query = """
             SELECT
-                issued_books.id,
-                issued_books.book_id,
-                issued_books.member_id,
-                issued_books.issue_date,
-                issued_books.due_date,
-                issued_books.return_date,
-                issued_books.status,
-                issued_books.fine_amount,
-                books.book_code,
-                books.title,
-                books.author,
-                members.member_code,
+                issued_books.id AS id,
+                issued_books.book_id AS book_id,
+                issued_books.member_id AS member_id,
+                issued_books.issue_date AS issue_date,
+                issued_books.due_date AS due_date,
+                issued_books.return_date AS return_date,
+                issued_books.status AS status,
+                issued_books.fine_amount AS fine_amount,
+                books.book_code AS book_code,
+                books.title AS title,
+                books.author AS author,
+                members.member_code AS member_code,
                 members.name AS member_name,
                 members.phone
             FROM issued_books
@@ -972,9 +1034,10 @@ class LibraryDatabase:
         """
         params: List[Any] = []
         if status:
-            query += " WHERE issued_books.status = ?"
+            query += " WHERE status = ?"
             params.append(status)
-        query += " ORDER BY issued_books.id DESC"
+        query += f" ORDER BY {order} {direction}"
+
         with self._connection() as connection:
             rows = connection.execute(query, params).fetchall()
         return [dict(row) for row in rows]
@@ -1025,15 +1088,30 @@ class LibraryDatabase:
             if int(book["available_quantity"]) > 0
         ]
 
-    def report_available_books(self) -> List[Dict[str, Any]]:
+    def report_unavailable_books(self) -> List[Dict[str, Any]]:
         return [
             book
             for book in self.fetch_books(order_by="title")
-            if int(book["available_quantity"]) == 0
+            if int(book["available_quantity"]) - int(book["reserved_quantity"]) <= 0
         ]
 
     def report_issued_books(self) -> List[Dict[str, Any]]:
         return self.fetch_issued_books(status="Issued")
+
+    def report_active_reservation(self) -> List[Dict[str, Any]]:
+        return self.fetch_reservations(status="Active")
+
+    def report_expired_reservation(self) -> List[Dict[str, Any]]:
+        return self.fetch_reservations(status="Expired")
+
+    def report_ready_reservation(self) -> List[Dict[str, Any]]:
+        return self.fetch_reservations(status="Ready")
+
+    def report_canceled_reservation(self) -> List[Dict[str, Any]]:
+        return self.fetch_reservations(status="Canceled")
+
+    def report_fulfill_reservation(self) -> List[Dict[str, Any]]:
+        return self.fetch_reservations(status="Fulfilled")
 
     def report_overdue_books(self) -> List[Dict[str, Any]]:
         today = date.today().isoformat()
@@ -1151,8 +1229,319 @@ class LibraryDatabase:
             ).fetchall()
         return [dict(row) for row in rows]
 
-    def search_all_books(self, text: str) -> List[Dict[str, Any]]:
-        return self.fetch_books(text, "title")
+    # ── Reservation Feature ──────────────────────────────────────────────────
 
-    def search_all_members(self, text: str) -> List[Dict[str, Any]]:
-        return self.fetch_members(text, "name")
+    def add_reservation(
+        self, book_id: int, member_id: int, reserved_date: Optional[str] = None
+    ) -> int:
+        """Reserve a book for a member. Expires automatically after 3 days."""
+        res_day = date.fromisoformat(reserved_date) if reserved_date else date.today()
+        # expiry_day = res_day + timedelta(days=3)
+        with self._connection() as connection:
+            book = connection.execute(
+                "SELECT id, available_quantity, reserved_quantity FROM books WHERE id = ?",
+                (book_id,),
+            ).fetchone()
+            if not book:
+                raise ValueError("Book not found.")
+            if int(book["available_quantity"]) > int(book["reserved_quantity"]):
+                raise ValueError(
+                    "Book is currently available — please issue it directly instead of reserving."
+                )
+            member = connection.execute(
+                "SELECT id FROM members WHERE id = ?", (member_id,)
+            ).fetchone()
+            if not member:
+                raise ValueError("Member not found.")
+
+            existing_issue = connection.execute(
+                "SELECT status FROM issued_books WHERE book_id=? AND member_id=? AND status='Issued' LIMIT 1",
+                (book_id, member_id),
+            ).fetchone()
+
+            if existing_issue:
+                raise ValueError("Member already issues this book")
+
+            existing = connection.execute(
+                "SELECT status FROM reservations WHERE book_id=? AND member_id=? AND (status='Active' OR status='Ready') LIMIT 1",
+                (book_id, member_id),
+            ).fetchone()
+            if existing:
+                if existing["status"] == "Active":
+                    raise ValueError(
+                        "Member already has an Active reservation for this book."
+                    )
+                else:
+                    raise ValueError(
+                        "The book is now available to issue for this member."
+                    )
+
+            all_reservations = connection.execute(
+                "SELECT * FROM reservations WHERE book_id=? AND status='Active'",
+                (book_id,),
+            ).fetchall()
+
+            queue_pos = len(all_reservations) + 1
+
+            cursor = connection.execute(
+                "INSERT INTO reservations (book_id, member_id, reserved_date, queue_pos, status) VALUES (?, ?, ?, ?, 'Active')",
+                (book_id, member_id, res_day.isoformat(), queue_pos),
+            )
+
+            connection.execute(
+                "UPDATE books SET reserved_quantity=reserved_quantity + 1 WHERE id=?",
+                (book_id,),
+            )
+
+            return cursor.lastrowid
+
+    def cancel_reservation(self, reservation_id: int) -> None:
+        with self._connection() as connection:
+            row = connection.execute(
+                "SELECT id, status, book_id, queue_pos FROM reservations WHERE id = ?",
+                (reservation_id,),
+            ).fetchone()
+            if not row:
+                raise ValueError("Reservation not found.")
+            if row["status"] != "Active" and row["status"] != "Ready":
+                raise ValueError("Only Active or Ready reservations can be cancelled.")
+            connection.execute(
+                "UPDATE reservations SET status='Canceled' WHERE id = ?",
+                (reservation_id,),
+            )
+            connection.execute(
+                "UPDATE books SET reserved_quantity=reserved_quantity - 1 WHERE id=?",
+                (row["book_id"],),
+            )
+
+            if row["status"] == "Active":
+                self.update_queue_pos(row["book_id"], row["queue_pos"], connection)
+            else:
+                self.next_reserve(row["book_id"], connection)
+
+    def update_queue_pos(self, book_id: int, queue_pos: int, connection) -> None:
+
+        rows = connection.execute(
+            "SELECT * from reservations WHERE book_id=? and queue_pos>?",
+            (book_id, queue_pos),
+        ).fetchall()
+        for row in rows:
+            connection.execute(
+                "UPDATE reservations SET queue_pos=queue_pos-1 WHERE id=?",
+                (row["id"],),
+            )
+
+    def expire_reservations(self) -> int:
+        """Mark all past-expiry Active reservations as Expired. Returns count updated."""
+        today = date.today().isoformat()
+        with self._connection() as connection:
+            rows = connection.execute(
+                """
+			SELECT id, book_id
+			FROM reservations
+			WHERE status='Ready'
+			AND expiry_date < ?
+			""",
+                (today,),
+            ).fetchall()
+            for row in rows:
+                connection.execute(
+                    """
+                    UPDATE reservations
+                    SET status='Expired'
+                    WHERE id=?
+                    """,
+                    (row["id"],),
+                )
+
+                connection.execute(
+                    """
+                    UPDATE books
+                    SET reserved_quantity=reserved_quantity-1
+                    WHERE id=?
+                    """,
+                    (row["book_id"],),
+                )
+
+            return len(rows)
+
+    def next_reserve(self, book_id, connection) -> bool:
+        row = connection.execute(
+            """SELECT id
+            FROM reservations 
+            WHERE status='Active' AND book_id=? AND queue_pos=1
+        """,
+            (book_id,),
+        ).fetchone()
+
+        if not row:
+            return False
+
+        ready_date = date.today()
+        expiry_date = ready_date + timedelta(days=3)
+        connection.execute(
+            "UPDATE reservations SET queue_pos=0, status='Ready', ready_date=?, expiry_date=? where id=?",
+            (
+                ready_date.isoformat(),
+                expiry_date.isoformat(),
+                row["id"],
+            ),
+        )
+
+        self.update_queue_pos(book_id, 1, connection)
+
+        return True
+
+    def change_queue_pos(self, current_position, new_position, book_code):
+        if current_position == 1 and new_position == 0:
+            raise ValueError("Cannot move first position to 0")
+
+        query = """SELECT id, queue_pos 
+            FROM reservations 
+            WHERE status='Active' AND book_id=? AND (queue_pos=? OR queue_pos=?)
+            ORDER BY queue_pos
+        """
+        with self._connection() as connection:
+            book = connection.execute(
+                "SELECT id FROM books WHERE book_code=?", (book_code,)
+            ).fetchone()
+            rows = connection.execute(
+                query, (book["id"], current_position, new_position)
+            ).fetchall()
+
+            if len(rows) != 2:
+                raise ValueError("Queue position is already lowest")
+
+            res_a, res_b = rows
+
+            if res_a["queue_pos"] == current_position:
+                current_reservation = res_a
+                swap_reservation = res_b
+            else:
+                current_reservation = res_b
+                swap_reservation = res_a
+
+            connection.execute(
+                "UPDATE reservations SET queue_pos=? WHERE id=?",
+                (new_position, current_reservation["id"]),
+            )
+            connection.execute(
+                "UPDATE reservations SET queue_pos=? WHERE id=?",
+                (current_position, swap_reservation["id"]),
+            )
+
+    def fetch_reservations(
+        self,
+        search_text: str = "",
+        search_field: str = "id",
+        order_by: str = "id",
+        ascending: bool = True,
+        status: Optional[str] = None,
+    ) -> List[Dict]:
+        allowed_fields = {
+            "book_code",
+            "title",
+            "member_code",
+            "member_name",
+            "status",
+        }
+
+        allowed_order = {
+            "id",
+            "book_code",
+            "title",
+            "member_code",
+            "member_name",
+            "reserved_date",
+            "ready_date",
+            "expiry_date",
+            "queue_pos",
+            "status",
+        }
+
+        field = search_field if search_field in allowed_fields else "title"
+
+        order = order_by if order_by in allowed_order else "id"
+        direction = "ASC" if ascending else "DESC"
+
+        params: List[Any] = []
+        query = """
+            SELECT reservations.id AS id, 
+                   reservations.reserved_date AS reserved_date, 
+                   reservations.ready_date AS ready_date, 
+                   reservations.expiry_date AS expiry_date, 
+                   reservations.fulfill_date AS fulfill_date,
+                   reservations.queue_pos AS queue_pos, 
+                   reservations.status AS status,
+                   books.book_code AS book_code, 
+                   books.title AS title,
+                   members.member_code AS member_code, 
+                   members.name AS member_name
+            FROM reservations
+            JOIN books ON books.id = reservations.book_id
+            JOIN members ON members.id = reservations.member_id
+        """
+
+        if search_text.strip():
+            query += f" WHERE {field} LIKE ?"
+            params.append(f"%{search_text.strip()}%")
+            if status:
+                query += "status = ?"
+                params.append(status)
+        else:
+            if status:
+                query += " WHERE status = ?"
+                params.append(status)
+        query += f" ORDER BY {order} {direction}"
+        with self._connection() as connection:
+            rows = connection.execute(query, params).fetchall()
+        return [dict(row) for row in rows]
+
+    def get_reservation_by_id(self, reservation_id: int) -> Optional[Dict]:
+        with self._connection() as connection:
+            row = connection.execute(
+                """
+                SELECT reservations.*, books.book_code, books.title,
+                       members.member_code, members.name AS member_name
+                FROM reservations
+                JOIN books ON books.id = reservations.book_id
+                JOIN members ON members.id = reservations.member_id
+                WHERE reservations.id = ?
+            """,
+                (reservation_id,),
+            ).fetchone()
+        return dict(row) if row else None
+
+    def get_reservations_by_book_id(self, book_id: int) -> Optional[Dict]:
+        with self._connection() as connection:
+            rows = connection.execute(
+                """
+                SELECT reservations.*, books.book_code, books.title,
+                       members.member_code, members.name AS member_name
+                FROM reservations
+                JOIN books ON books.id = reservations.book_id
+                JOIN members ON members.id = reservations.member_id
+                WHERE reservations.book_id = ?
+            """,
+                (book_id,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def get_ready_reservation_by_book_id(self, book_id: int) -> Optional[Dict]:
+        with self._connection() as connection:
+            row = connection.execute(
+                """
+                SELECT *
+                FROM reservations
+                WHERE book_id = ? and status='Ready'?
+            """,
+                (book_id,),
+            ).fetchone()
+        return dict(row) if row else None
+
+    def notify_reservation(self, reservation_id: int) -> None:
+        """Mark a reservation as notified (book became available)."""
+        with self._connection() as connection:
+            connection.execute(
+                "UPDATE reservations SET notified=1 WHERE id=?", (reservation_id,)
+            )

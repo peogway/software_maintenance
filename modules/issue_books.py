@@ -156,7 +156,7 @@ class IssueBooksFrame(BaseModuleFrame):
     def _load_book_options(self) -> None:
         books = self.db.report_available_books()
         self.book_options = {
-            f"{book['book_code']} - {book['title']} (Avail: {book['available_quantity']})": book[
+            f"{book['book_code']} - {book['title']} (Avail: {book['available_quantity']}, Reserved: {book['reserved_quantity']})": book[
                 "id"
             ]
             for book in books
@@ -201,14 +201,13 @@ class IssueBooksFrame(BaseModuleFrame):
             refresh_data=True,
             display_success_message=False,
         )
-
-        if fine:
+        if fine is not None:
             messagebox.showinfo(
                 "Success", f"Book returned successfully. Fine: Tk {fine:.2f}"
             )
 
     def load_data(self) -> None:
-        issues = self.db.fetch_issued_books()
+        issues = self.db.fetch_issued_books(self.sort_column, self.sort_ascending)
         self.fill_treeview(
             self.tree,
             [

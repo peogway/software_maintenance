@@ -42,6 +42,7 @@ class BaseModuleFrame(tk.Frame):
         self.app = app
         self.db = db
         self.selected_id = None
+        self.current_pos = None
         self.sort_column = None
         self.sort_ascending = True
         self.search_field_var = None
@@ -255,6 +256,7 @@ class BaseModuleFrame(tk.Frame):
         parse_int: bool = False,
         isse_selection: bool = False,
         code_entry: bool = False,
+        reserve_selection: bool = False,
         report: bool = False,
     ) -> None:
         self.clear_entries(self.form_fields.values())
@@ -274,7 +276,16 @@ class BaseModuleFrame(tk.Frame):
             self.selected_id = value
             status_text = f"Selected Issue ID: {values[0]} | Status: {values[8]}"
             self.issue_id_label.configure(text=status_text)
-        else:
+
+        if reserve_selection:
+            self.selected_id = value
+            self.current_pos = values[-2]
+            self.cur_book_code = values[1]
+            self.cur_status = values[-1]
+            status_text = f"Selected Reservation ID: {values[0]} | Status: {values[-1]}"
+            self.reserve_id_label.configure(text=status_text)
+
+        if not isse_selection and not reserve_selection:
             selected = fn(value)
             if not selected:
                 return

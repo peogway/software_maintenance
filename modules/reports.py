@@ -41,6 +41,10 @@ class ReportsFrame(BaseModuleFrame):
                 "Available Books",
                 "Issued Books",
                 "Overdue Books",
+                "Active reservations",
+                "Fulfilled reservations",
+                "Canceled reservations",
+                "Expired reservations",
                 "Member Report",
                 "Fine Report",
             ],
@@ -121,6 +125,66 @@ class ReportsFrame(BaseModuleFrame):
                 ],
                 "loader": self.db.report_overdue_books,
             },
+            "Active reservations": {
+                "columns": [
+                    "id",
+                    "book_code",
+                    "title",
+                    "member_code",
+                    "member_name",
+                    "reserved_date",
+                    "ready_date",
+                    "expiry_date",
+                    "queue_pos",
+                    "status",
+                ],
+                "loader": self.db.report_active_reservation,
+            },
+            "Fulfilled reservations": {
+                "columns": [
+                    "id",
+                    "book_code",
+                    "title",
+                    "member_code",
+                    "member_name",
+                    "reserved_date",
+                    "ready_date",
+                    "expiry_date",
+                    "queue_pos",
+                    "status",
+                ],
+                "loader": self.db.report_fulfill_reservation,
+            },
+            "Canceled reservations": {
+                "columns": [
+                    "id",
+                    "book_code",
+                    "title",
+                    "member_code",
+                    "member_name",
+                    "reserved_date",
+                    "ready_date",
+                    "expiry_date",
+                    "queue_pos",
+                    "status",
+                ],
+                "loader": self.db.report_canceled_reservation,
+            },
+            "Expired reservations": {
+                "columns": [
+                    "id",
+                    "book_code",
+                    "title",
+                    "member_code",
+                    "member_name",
+                    "reserved_date",
+                    "ready_date",
+                    "expiry_date",
+                    "queue_pos",
+                    "status",
+                ],
+                "loader": self.db.report_expired_reservation,
+            },
             "Member Report": {
                 "columns": [
                     "member_code",
@@ -188,6 +252,25 @@ class ReportsFrame(BaseModuleFrame):
                 row["status"],
                 f"Tk {row['fine_amount']:.2f}",
             )
+        if report_name in {
+            "Active reservations",
+            "Fulfilled reservations",
+            "Canceled reservations",
+            "Expired reservations",
+        }:
+            return (
+                row["id"],
+                row["book_code"],
+                row["title"],
+                row["member_code"],
+                row["member_name"],
+                row["reserved_date"],
+                row["ready_date"],
+                row["expiry_date"],
+                row["queue_pos"],
+                row["status"],
+            )
+
         if report_name == "Member Report":
             return (
                 row["member_code"],
