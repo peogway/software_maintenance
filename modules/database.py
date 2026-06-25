@@ -1068,6 +1068,9 @@ class LibraryDatabase:
                 """,
                 (today,),
             ).fetchone()["total"]
+            books_reserved = connection.execute(
+                "SELECT COUNT(*) AS total FROM reservations WHERE status = 'Ready' OR status = 'Active'"
+            ).fetchone()["total"]
             total_fines = connection.execute(
                 "SELECT COALESCE(SUM(fine_amount), 0) AS total FROM issued_books"
             ).fetchone()["total"]
@@ -1077,6 +1080,7 @@ class LibraryDatabase:
             "total_students": int(total_students),
             "books_issued": int(books_issued),
             "books_available": int(books_available),
+            "books_reserved": int(books_reserved),
             "overdue_books": int(overdue_books),
             "total_fines": float(total_fines),
         }

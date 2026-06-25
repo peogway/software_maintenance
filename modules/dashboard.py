@@ -36,6 +36,7 @@ class DashboardFrame(BaseModuleFrame):
             ("Total Members", "total_members", COLORS["accent"]),
             ("Books Issued", "books_issued", COLORS["warning"]),
             ("Books Available", "books_available", COLORS["success"]),
+            ("Books Reserved", "books_reserved", "#74cd96"),
             ("Overdue Books", "overdue_books", COLORS["danger"]),
             ("Total Fines", "total_fines", "#8b5cf6"),
         ]
