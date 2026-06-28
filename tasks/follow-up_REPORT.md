@@ -2,7 +2,7 @@
 
 ## 1. Project Links
 - GitHub repository: [Github link](https://github.com/peogway/software_maintenance)
-- Demo video: [Demo video link]()
+- Demo video: [Demo video link](https://youtu.be/BbNpkuFae2o)
 
 ---
 
