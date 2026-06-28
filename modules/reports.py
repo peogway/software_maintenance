@@ -331,7 +331,7 @@ class ReportsFrame(BaseModuleFrame):
                 writer.writerow(self.current_columns)
                 writer.writerows(self.current_rows)
 
-        success = self.safe_fn(
+        success = self.run_safe(
             lambda: write_csv(file_path),
             success_type="Export Complete",
             success_msg=f"Report exported to {file_path}",

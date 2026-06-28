@@ -11,7 +11,7 @@ class MembersFrame(BaseModuleFrame):
 
     def __init__(self, parent: tk.Widget, app, db) -> None:
         super().__init__(parent, app, db)
-        self.selected_id = None
+        self.selected_record_id = None
         self.search_field_var = tk.StringVar(value="name")
         self.search_text_var = tk.StringVar()
         self.sort_column = "name"
@@ -135,7 +135,7 @@ class MembersFrame(BaseModuleFrame):
             "address": self.address_text,
         }
 
-    def _get_code(self) -> str:
+    def generate_code(self) -> str:
         return self.db.generate_member_code()
 
     def _validate(self, data: dict) -> bool:
@@ -152,7 +152,7 @@ class MembersFrame(BaseModuleFrame):
         if not self._validate(data):
             return
 
-        success = self.safe_fn(
+        success = self.run_safe(
             lambda: self.db.add_member(data),
             success_msg="Member added successfully.",
             clear_form=True,
@@ -160,28 +160,28 @@ class MembersFrame(BaseModuleFrame):
         )
 
     def update_member(self) -> None:
-        if self.selected_id is None:
+        if self.selected_record_id is None:
             messagebox.showwarning("Selection Required", "Select a member to update.")
             return
         data = self._collect_data()
         if not self._validate(data):
             return
 
-        success = self.safe_fn(
-            lambda: self.db.update_member(self.selected_id, data),
+        success = self.run_safe(
+            lambda: self.db.update_member(self.selected_record_id, data),
             success_msg="Member updated successfully.",
             load_data=True,
         )
 
     def delete_member(self) -> None:
-        if self.selected_id is None:
+        if self.selected_record_id is None:
             messagebox.showwarning("Selection Required", "Select a member to delete.")
             return
         if not messagebox.askyesno("Confirm Delete", "Delete the selected member?"):
             return
 
-        success = self.safe_fn(
-            lambda: self.db.delete_member(self.selected_id),
+        success = self.run_safe(
+            lambda: self.db.delete_member(self.selected_record_id),
             success_msg="Member deleted successfully.",
             clear_form=True,
             load_data=True,

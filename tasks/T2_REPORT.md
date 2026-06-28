@@ -1,7 +1,7 @@
 # Refactor Report
 
 ## Overview
-This refactor focuses on reducing duplication, centralizing UI patterns, and simplifying database access logic in a Tkinter-based CRUD application.
+This refactor focuses on reducing duplication, centralizing UI patterns, simplifying database access logic, and improving naming consistency in a Tkinter-based CRUD application.
 
 ---
 
@@ -27,7 +27,15 @@ This refactor focuses on reducing duplication, centralizing UI patterns, and sim
 ### 5. Existence Check
 - Added `exists_any` for quick validation checks.
 
-### 6. Cleanup
+
+### 6. Naming Convention Improvements
+- Standardized naming across modules for better readability and consistency.
+
+Example:
+    - `_set_<name>_code()` → `set_code()`
+
+
+### 7. Cleanup
 - Removed unused imports (e.g. `os`).
 
 ---
@@ -67,7 +75,7 @@ Result:
 ---
 
 ### 4. Safe Execution Wrapper
-- Introduced `safe_fn`
+- Introduced `run_safe`
 - Centralized:
   - error handling
   - success messages

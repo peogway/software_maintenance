@@ -191,9 +191,9 @@ class TestReservationQueueLifecycle:
         res_id = db.add_reservation(book_id, m2)
         assert res_id > 0
 
-        res = db.get_reservation_by_id(res_id)
-        assert res["status"] == "Active"
-        assert res["queue_pos"] == 1
+        result = db.get_reservation_by_id(res_id)
+        assert result["status"] == "Active"
+        assert result["queue_pos"] == 1
 
     def test_reserved_quantity_increments(self, db):
         book_id, m1, m2, _ = self._setup(db)
@@ -279,8 +279,8 @@ class TestReservationQueueLifecycle:
         count = db.expire_reservations()
         assert count == 1
 
-        res = db.get_reservation_by_id(res_id)
-        assert res["status"] == "Expired"
+        result = db.get_reservation_by_id(res_id)
+        assert result["status"] == "Expired"
 
     def test_duplicate_reservation_same_member_raises(self, db):
         book_id, m1, m2, _ = self._setup(db)

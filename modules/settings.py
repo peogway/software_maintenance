@@ -144,7 +144,7 @@ class SettingsFrame(BaseModuleFrame):
             )
             self.app.refresh_header()
 
-        success = self.safe_fn(
+        success = self.run_safe(
             save_library_info_flow,
             success_msg="Library information updated successfully.",
         )
@@ -201,7 +201,7 @@ class SettingsFrame(BaseModuleFrame):
             self.db.restore_database(file_path)
             self.app.refresh_header()
 
-        success = self.safe_fn(
+        success = self.run_safe(
             lambda: restore_database_flow(file_path),
             success_msg="Database restored successfully.",
             refresh_data=True,

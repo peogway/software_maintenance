@@ -11,7 +11,7 @@ class UsersFrame(BaseModuleFrame):
 
     def __init__(self, parent: tk.Widget, app, db) -> None:
         super().__init__(parent, app, db)
-        self.selected_id = None
+        self.selected_record_id = None
         self.search_field_var = tk.StringVar(value="username")
         self.search_text_var = tk.StringVar()
         self.sort_column = "created_at"
@@ -180,7 +180,7 @@ class UsersFrame(BaseModuleFrame):
         if not self._validate_add(data):
             return
 
-        success = self.safe_fn(
+        success = self.run_safe(
             lambda: self.db.create_user(
                 data["username"], data["password"], data["role"]
             ),
@@ -190,16 +190,16 @@ class UsersFrame(BaseModuleFrame):
         )
 
     def update_user(self) -> None:
-        if self.selected_id is None:
+        if self.selected_record_id is None:
             messagebox.showwarning("Selection Required", "Select a user to update.")
             return
         data = self._collect_data()
         if not self._validate_update(data):
             return
 
-        success = self.safe_fn(
+        success = self.run_safe(
             lambda: self.db.update_user(
-                self.selected_id,
+                self.selected_record_id,
                 data["username"],
                 data["role"],
                 data["password"] or None,
@@ -209,10 +209,13 @@ class UsersFrame(BaseModuleFrame):
         )
 
     def delete_user(self) -> None:
-        if self.selected_id is None:
+        if self.selected_record_id is None:
             messagebox.showwarning("Selection Required", "Select a user to delete.")
             return
-        if self.app.current_user and self.app.current_user["id"] == self.selected_id:
+        if (
+            self.app.current_user
+            and self.app.current_user["id"] == self.selected_record_id
+        ):
             messagebox.showwarning(
                 "Action Not Allowed",
                 "You cannot delete the account you are currently logged into.",
@@ -221,8 +224,8 @@ class UsersFrame(BaseModuleFrame):
         if not messagebox.askyesno("Confirm Delete", "Delete the selected user?"):
             return
 
-        success = self.safe_fn(
-            lambda: self.db.delete_user(self.selected_id),
+        success = self.run_safe(
+            lambda: self.db.delete_user(self.selected_record_id),
             success_msg="User deleted successfully.",
             clear_form=True,
             load_data=True,

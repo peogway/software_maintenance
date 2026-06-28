@@ -11,10 +11,10 @@ class ReserveBookFrame(BaseModuleFrame):
 
     def __init__(self, parent: tk.Widget, app, db) -> None:
         super().__init__(parent, app, db)
-        self.selected_id = None
+        self.selected_record_id = None
         self.current_pos = None
-        self.cur_book_code = None
-        self.cur_status = None
+        self.current_book_code = None
+        self.current_status = None
         self.search_field_var = tk.StringVar(value="book_title")
         self.search_text_var = tk.StringVar()
         self.member_options = {}
@@ -266,20 +266,20 @@ class ReserveBookFrame(BaseModuleFrame):
             )
             return
 
-        success = self.safe_fn(
+        success = self.run_safe(
             lambda: self.db.add_reservation(book_id=book_id, member_id=member_id),
             success_msg="Book reserved successfully.",
             refresh_data=True,
         )
 
     def issue_book(self) -> None:
-        if self.selected_id is None or self.cur_status != "Ready":
+        if self.selected_record_id is None or self.current_status != "Ready":
             messagebox.showwarning(
                 "Selection Required", "Select a Ready reserved record to issue."
             )
             return
-        reservation = self.db.get_reservation_by_id(self.selected_id)
-        self.safe_fn(
+        reservation = self.db.get_reservation_by_id(self.selected_record_id)
+        self.run_safe(
             lambda: self.db.issue_book(
                 reservation["book_id"], reservation["member_id"]
             ),
@@ -288,55 +288,55 @@ class ReserveBookFrame(BaseModuleFrame):
         )
 
     def cancel_reservation(self) -> None:
-        if self.selected_id is None:
+        if self.selected_record_id is None:
             messagebox.showwarning(
                 "Selection Required", "Select a reserved record to return."
             )
             return
 
-        self.safe_fn(
-            lambda: self.db.cancel_reservation(self.selected_id),
+        self.run_safe(
+            lambda: self.db.cancel_reservation(self.selected_record_id),
             load_data=True,
             success_msg="Book added successfully.",
         )
 
     def move_up(self) -> None:
-        if self.selected_id is None:
+        if self.selected_record_id is None:
             messagebox.showwarning(
                 "Selection Required", "Select a reserved record to return."
             )
             return
 
-        if self.cur_status != "Active":
+        if self.current_status != "Active":
             messagebox.showwarning(
                 "Invalid choice", "Only Active reservation can change queue position"
             )
             return
 
-        self.safe_fn(
+        self.run_safe(
             lambda: self.db.change_queue_pos(
-                int(self.current_pos), int(self.current_pos) - 1, self.cur_book_code
+                int(self.current_pos), int(self.current_pos) - 1, self.current_book_code
             ),
             load_data=True,
             success_msg="Reservation moved up successfully.",
         )
 
     def move_down(self) -> None:
-        if self.selected_id is None:
+        if self.selected_record_id is None:
             messagebox.showwarning(
                 "Selection Required", "Select a reserved record to return."
             )
             return
 
-        if self.cur_status != "Active":
+        if self.current_status != "Active":
             messagebox.showwarning(
                 "Invalid choice", "Only Active reservation can change queue position"
             )
             return
 
-        self.safe_fn(
+        self.run_safe(
             lambda: self.db.change_queue_pos(
-                int(self.current_pos), int(self.current_pos) + 1, self.cur_book_code
+                int(self.current_pos), int(self.current_pos) + 1, self.current_book_code
             ),
             load_data=True,
             success_msg="Reservation moved down successfully.",
@@ -370,7 +370,7 @@ class ReserveBookFrame(BaseModuleFrame):
         )
 
     def refresh_data(self) -> None:
-        self.selected_id = None
+        self.selected_record_id = None
         self._load_member_options()
         self._load_book_options()
         self.load_data()

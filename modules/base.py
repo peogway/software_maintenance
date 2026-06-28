@@ -41,7 +41,7 @@ class BaseModuleFrame(tk.Frame):
         super().__init__(parent, bg=COLORS["bg"])
         self.app = app
         self.db = db
-        self.selected_id = None
+        self.selected_record_id = None
         self.current_pos = None
         self.sort_column = None
         self.sort_ascending = True
@@ -254,7 +254,7 @@ class BaseModuleFrame(tk.Frame):
         self,
         fn: Optional[Callable[[], None]] = None,
         parse_int: bool = False,
-        isse_selection: bool = False,
+        issue_selection: bool = False,
         code_entry: bool = False,
         reserve_selection: bool = False,
         report: bool = False,
@@ -266,30 +266,30 @@ class BaseModuleFrame(tk.Frame):
         values = self.tree.item(selection[0], "values")
         value = values[0]
 
-        if parse_int or isse_selection:
+        if parse_int or issue_selection:
             value = int(value)
 
         if code_entry:
             self.code_entry.configure(state="normal")
 
-        if isse_selection:
-            self.selected_id = value
+        if issue_selection:
+            self.selected_record_id = value
             status_text = f"Selected Issue ID: {values[0]} | Status: {values[8]}"
             self.issue_id_label.configure(text=status_text)
 
         if reserve_selection:
-            self.selected_id = value
+            self.selected_record_id = value
             self.current_pos = values[-2]
-            self.cur_book_code = values[1]
-            self.cur_status = values[-1]
+            self.current_book_code = values[1]
+            self.current_status = values[-1]
             status_text = f"Selected Reservation ID: {values[0]} | Status: {values[-1]}"
             self.reserve_id_label.configure(text=status_text)
 
-        if not isse_selection and not reserve_selection:
+        if not issue_selection and not reserve_selection:
             selected = fn(value)
             if not selected:
                 return
-            self.selected_id = selected["id"]
+            self.selected_record_id = selected["id"]
             self.fill_form_data(self.form_fields, selected)
 
     def set_sort(self, column: str) -> None:
@@ -305,7 +305,7 @@ class BaseModuleFrame(tk.Frame):
         self.search_text_var.set("")
         self.load_data()
 
-    def safe_fn(
+    def run_safe(
         self,
         fn: Callable[[], Any],
         error_type: str = "Error",
@@ -318,7 +318,7 @@ class BaseModuleFrame(tk.Frame):
         refresh_data=False,
     ) -> bool | Any:
         try:
-            res = fn()
+            result = fn()
             if clear_form:
                 self.clear_form()
             if load_data:
@@ -327,7 +327,7 @@ class BaseModuleFrame(tk.Frame):
                 self.refresh_data()
 
             if not display_success_message:
-                return res
+                return result
 
             if success_msg:
                 messagebox.showinfo(success_type, success_msg)
@@ -337,15 +337,15 @@ class BaseModuleFrame(tk.Frame):
             return False
 
     def clear_form(self, user_page: bool = False) -> None:
-        self.selected_id = None
+        self.selected_record_id = None
         self.clear_entries(*self.form_fields.values())
 
         if not user_page:
-            self._set_code()
+            self.set_code()
         self.tree.selection_remove(self.tree.selection())
 
     def refresh_data(self) -> None:
-        self._set_code()
+        self.set_code()
         self.load_data()
 
     def get_form_data(self, fields):
@@ -374,12 +374,12 @@ class BaseModuleFrame(tk.Frame):
     def _collect_data(self):
         return self.get_form_data(self.form_fields)
 
-    def _set_code(self) -> None:
-        code = self._get_code()
+    def set_code(self) -> None:
+        code = self.generate_code()
         self.code_entry.configure(state="normal")
         self.code_entry.delete(0, tk.END)
         self.code_entry.insert(0, code)
         self.code_entry.configure(state="readonly")
 
-    def _get_code(self) -> str:
+    def generate_code(self) -> str:
         pass

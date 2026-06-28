@@ -11,7 +11,7 @@ class BooksFrame(BaseModuleFrame):
 
     def __init__(self, parent: tk.Widget, app, db) -> None:
         super().__init__(parent, app, db)
-        self.selected_id = None
+        self.selected_record_id = None
         self.search_field_var = tk.StringVar(value="title")
         self.search_text_var = tk.StringVar()
         self.sort_column = "title"
@@ -161,7 +161,7 @@ class BooksFrame(BaseModuleFrame):
             "shelf_location": self.shelf_entry,
         }
 
-    def _get_code(self) -> None:
+    def generate_code(self) -> None:
         return self.db.generate_book_code()
 
     def _validate(self, data: dict) -> bool:
@@ -182,7 +182,7 @@ class BooksFrame(BaseModuleFrame):
                 )
                 return False
 
-        success = self.safe_fn(
+        success = self.run_safe(
             lambda: int(data["quantity"]),
             error_type="Validation Error",
             fail_msg="Quantity must be a positive whole number.",
@@ -198,7 +198,7 @@ class BooksFrame(BaseModuleFrame):
         if not self._validate(data):
             return
 
-        success = self.safe_fn(
+        success = self.run_safe(
             lambda: self.db.add_book(data),
             success_msg="Book added successfully.",
             load_data=True,
@@ -206,28 +206,28 @@ class BooksFrame(BaseModuleFrame):
         )
 
     def update_book(self) -> None:
-        if self.selected_id is None:
+        if self.selected_record_id is None:
             messagebox.showwarning("Selection Required", "Select a book to update.")
             return
         data = self._collect_data()
         if not self._validate(data):
             return
 
-        success = self.safe_fn(
-            lambda: self.db.update_book(self.selected_id, data),
+        success = self.run_safe(
+            lambda: self.db.update_book(self.selected_record_id, data),
             success_msg="Book updated successfully.",
             load_data=True,
         )
 
     def delete_book(self) -> None:
-        if self.selected_id is None:
+        if self.selected_record_id is None:
             messagebox.showwarning("Selection Required", "Select a book to delete.")
             return
         if not messagebox.askyesno("Confirm Delete", "Delete the selected book?"):
             return
 
-        success = self.safe_fn(
-            lambda: self.db.delete_book(self.selected_id),
+        success = self.run_safe(
+            lambda: self.db.delete_book(self.selected_record_id),
             success_msg="Book deleted successfully.",
             clear_form=True,
             load_data=True,

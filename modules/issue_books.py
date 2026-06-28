@@ -11,7 +11,7 @@ class IssueBooksFrame(BaseModuleFrame):
 
     def __init__(self, parent: tk.Widget, app, db) -> None:
         super().__init__(parent, app, db)
-        self.selected_id = None
+        self.selected_record_id = None
         self.member_options = {}
         self.book_options = {}
         self.member_var = tk.StringVar()
@@ -183,21 +183,21 @@ class IssueBooksFrame(BaseModuleFrame):
             )
             return
 
-        success = self.safe_fn(
+        success = self.run_safe(
             lambda: self.db.issue_book(book_id, member_id),
             success_msg="Book issued successfully.",
             refresh_data=True,
         )
 
     def return_selected_book(self) -> None:
-        if self.selected_id is None:
+        if self.selected_record_id is None:
             messagebox.showwarning(
                 "Selection Required", "Select an issued record to return."
             )
             return
 
-        fine = self.safe_fn(
-            lambda: self.db.return_book(self.selected_id),
+        fine = self.run_safe(
+            lambda: self.db.return_book(self.selected_record_id),
             refresh_data=True,
             display_success_message=False,
         )
@@ -228,7 +228,7 @@ class IssueBooksFrame(BaseModuleFrame):
         )
 
     def refresh_data(self) -> None:
-        self.selected_id = None
+        self.selected_record_id = None
         self._load_member_options()
         self._load_book_options()
         self.load_data()
@@ -237,4 +237,4 @@ class IssueBooksFrame(BaseModuleFrame):
         )
 
     def on_select(self, event) -> None:
-        super().on_select(isse_selection=True)
+        super().on_select(issue_selection=True)
