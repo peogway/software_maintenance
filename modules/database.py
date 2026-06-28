@@ -108,7 +108,7 @@ class LibraryDatabase:
             setting_value TEXT NOT NULL
         );
 
-         CREATE TABLE IF NOT EXISTS reservations (
+        CREATE TABLE IF NOT EXISTS reservations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             book_id INTEGER NOT NULL,
             member_id INTEGER NOT NULL,
