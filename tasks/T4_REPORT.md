@@ -20,6 +20,13 @@ addopts = -v --tb=short
 
 ```
 
+For running tests:
+```bash
+pip install pytest pytest-cov
+
+pytest tests/ --cov=modules.database --cov-report=term-missing
+```
+
 ## 3. Unit Tests
 **File:** `test_unit_database.py`
 
