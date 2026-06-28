@@ -1542,10 +1542,3 @@ class LibraryDatabase:
                 (book_id,),
             ).fetchone()
         return dict(row) if row else None
-
-    def notify_reservation(self, reservation_id: int) -> None:
-        """Mark a reservation as notified (book became available)."""
-        with self._connection() as connection:
-            connection.execute(
-                "UPDATE reservations SET notified=1 WHERE id=?", (reservation_id,)
-            )
